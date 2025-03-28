@@ -8,15 +8,15 @@
       }
     },
     {
-      "src": "/mywebsite/wsgi.py",
+      "src": "/nfc_system/wsgi.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "15mb" }
+      "config": { "maxLambdaSize": "15mb"}
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "mywebsite/wsgi.py"
+      "dest": "nfc_system/wsgi.py"
     },
     {
       "src": "/static/(.*)",
