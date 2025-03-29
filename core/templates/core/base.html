@@ -33,7 +33,7 @@
                 <div class="hidden md:flex items-center space-x-4">
                     {% if user.is_authenticated %}
                         {% if user.is_superuser %}
-                            <a href="{% url 'admin_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                            <a href="{% url 'admin-dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
                             <a href="{% url 'admin_users' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Users</a>
                             <a href="{% url 'admin_settlements' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
                         {% elif user.is_outlet %}
@@ -54,7 +54,6 @@
                         </div>
                     {% else %}
                         <a href="{% url 'login' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                        <a href="{% url 'register' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Register</a>
                     {% endif %}
                 </div>
 
@@ -72,7 +71,7 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 {% if user.is_authenticated %}
                     {% if user.is_superuser %}
-                        <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
+                        <a href="{% url 'admin-dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
                         <a href="{% url 'admin_users' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Users</a>
                         <a href="{% url 'admin_settlements' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
                     {% elif user.is_outlet %}
@@ -83,7 +82,6 @@
                     <a href="{% url 'logout' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Logout</a>
                 {% else %}
                     <a href="{% url 'login' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Login</a>
-                    <a href="{% url 'register' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Register</a>
                 {% endif %}
             </div>
         </div>

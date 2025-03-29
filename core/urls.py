@@ -14,13 +14,11 @@ router.register(r'admin-dashboard', views.AdminDashboardViewSet, basename='admin
 urlpatterns = [
     # API endpoints
     path('api/', include(router.urls)),
-    path('api/register/', views.register_user, name='register'),
     path('api/password-reset/request/', views.request_password_reset, name='request-password-reset'),
     path('api/password-reset/reset/', views.reset_password, name='reset-password'),
 
     # Page routes
     path('', views.home, name='home'),
-    path('register/', views.register, name='register-page'),
     path('profile/', views.profile, name='profile'),
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
@@ -44,9 +42,6 @@ urlpatterns = [
 
     # Error handlers
     path('400/', views.bad_request, name='400'),
-    path('403/', views.permission_denied, name='403'),
-    path('404/', views.page_not_found, name='404'),
-    path('500/', views.server_error, name='500'),
 ]
 
 # Custom error handlers

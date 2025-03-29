@@ -65,7 +65,6 @@ class Outlet(models.Model):
 class Card(models.Model):
     card_id = models.CharField(max_length=50, unique=True)
     secure_key = models.CharField(max_length=16, unique=True, default=uuid.uuid4().hex[:16])
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cards', null=True, blank=True)
     balance = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 
@@ -73,24 +72,11 @@ class Card(models.Model):
         validators=[MinValueValidator(0.00)]
     )
     active = models.BooleanField(default=True)
-    daily_limit = models.DecimalField(max_digits=10, decimal_places=2, default=10000.00)
-    transaction_limit = models.DecimalField(max_digits=10, decimal_places=2, default=5000.00)
-    last_used = models.DateTimeField(null=True, blank=True)
-    activation_date = models.DateTimeField(default=timezone.now)
-    expiry_date = models.DateTimeField(null=True, blank=True)
-    is_blocked = models.BooleanField(default=False)
-    block_reason = models.CharField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Card {self.card_id} - {self.user.username if self.user else 'Unassigned'}"
-
-    def save(self, *args, **kwargs):
-        if not self.expiry_date:
-            # Set expiry to 3 years from now
-            self.expiry_date = timezone.now() + timezone.timedelta(days=1095)
-        super().save(*args, **kwargs)
+        return f"Card {self.card_id}"
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = (

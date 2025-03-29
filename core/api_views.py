@@ -14,112 +14,6 @@ from django.db import transaction
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def register_user(request):
-    """
-    Register a new user (customer or outlet)
-    """
-    try:
-        with transaction.atomic():
-            # Extract common fields
-            username = request.data.get('username')
-            email = request.data.get('email')
-            password = request.data.get('password')
-            user_type = request.data.get('user_type')
-
-            # Validate required fields
-            if not all([username, email, password, user_type]):
-                return Response({
-                    'error': 'Missing required fields',
-                    'required': ['username', 'email', 'password', 'user_type']
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Validate user type
-            if user_type not in ['customer', 'outlet']:
-                return Response({
-                    'error': 'Invalid user type. Must be either "customer" or "outlet"'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if username exists
-            if User.objects.filter(username=username).exists():
-                return Response({
-                    'error': 'Username already exists'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if email exists
-            if User.objects.filter(email=email).exists():
-                return Response({
-                    'error': 'Email already exists'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Create user object
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                password=password,
-                user_type=user_type
-            )
-
-            if user_type == 'customer':
-                # Update customer fields
-                user.first_name = request.data.get('first_name', '')
-                user.last_name = request.data.get('last_name', '')
-                user.phone_number = request.data.get('phone_number', '')
-                user.save()
-            
-            elif user_type == 'outlet':
-                # Validate required outlet fields
-                outlet_fields = ['name', 'address', 'business_type', 'tax_id']
-                if not all(request.data.get(field) for field in outlet_fields):
-                    user.delete()  # Rollback user creation
-                    return Response({
-                        'error': 'Missing required outlet fields',
-                        'required': outlet_fields
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                # Validate business type
-                business_type = request.data.get('business_type')
-                valid_business_types = dict(Outlet.BUSINESS_TYPES).keys()
-                if business_type not in valid_business_types:
-                    user.delete()  # Rollback user creation
-                    return Response({
-                        'error': 'Invalid business type',
-                        'valid_types': list(valid_business_types)
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                # Create outlet
-                Outlet.objects.create(
-                    user=user,
-                    name=request.data.get('name'),
-                    address=request.data.get('address'),
-                    business_type=request.data.get('business_type'),
-                    tax_id=request.data.get('tax_id')
-                )
-
-            # Generate tokens
-            refresh = RefreshToken.for_user(user)
-            
-            return Response({
-                'message': 'Registration successful',
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'user_type': user.user_type
-                },
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token)
-                }
-            }, status=status.HTTP_201_CREATED)
-
-    except Exception as e:
-        return Response({
-            'error': 'Registration failed',
-            'detail': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
 def request_password_reset(request):
     email = request.data.get('email')
     try:
@@ -264,6 +158,11 @@ class CardViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def history(self, request):
+        transactions = Transaction.objects.filter(outlet=request.user.outlet)
+        return Response(self.get_serializer(transactions, many=True).data)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()

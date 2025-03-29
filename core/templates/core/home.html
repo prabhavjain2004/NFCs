@@ -1,10 +1,10 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
 
 {% block title %}Home - NFC Payment System{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+<div class="bg-white">
     <!-- Hero Section -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         <div class="text-center">
@@ -16,8 +16,8 @@
                 Fast, secure, and convenient.
             </p>
             <div class="space-x-4">
-                <a href="{% url 'register' %}" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                    Get Started
+                <a href="{% url 'login' %}" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    Login
                 </a>
                 <a href="#features" class="inline-block px-8 py-3 bg-white text-blue-600 font-medium rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
                     Learn More
@@ -27,92 +27,47 @@
     </div>
 
     <!-- Features Section -->
-    <div id="features" class="py-16 bg-white">
+    <div id="features" class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">Why Choose Us?</h2>
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-12">Key Features</h2>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Security Feature -->
-                <div class="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-6 rounded-lg shadow-md">
                     <div class="text-blue-600 mb-4">
-                        <i class="fas fa-shield-alt text-4xl"></i>
+                        <i class="fas fa-bolt text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Secure Transactions</h3>
-                    <p class="text-gray-600">
-                        Advanced encryption and security measures to protect your transactions and data.
-                    </p>
+                    <h3 class="text-xl font-semibold mb-2">Fast Transactions</h3>
+                    <p class="text-gray-600">Complete payments in seconds with just a tap of your NFC card.</p>
                 </div>
-
-                <!-- Speed Feature -->
-                <div class="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-6 rounded-lg shadow-md">
                     <div class="text-blue-600 mb-4">
-                        <i class="fas fa-bolt text-4xl"></i>
+                        <i class="fas fa-shield-alt text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Lightning Fast</h3>
-                    <p class="text-gray-600">
-                        Complete transactions in seconds with just a tap of your NFC card.
-                    </p>
+                    <h3 class="text-xl font-semibold mb-2">Secure Payments</h3>
+                    <p class="text-gray-600">Advanced encryption and security measures to protect your transactions.</p>
                 </div>
-
-                <!-- Convenience Feature -->
-                <div class="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                <div class="bg-white p-6 rounded-lg shadow-md">
                     <div class="text-blue-600 mb-4">
-                        <i class="fas fa-magic text-4xl"></i>
+                        <i class="fas fa-chart-line text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Easy to Use</h3>
-                    <p class="text-gray-600">
-                        Simple and intuitive interface for both customers and businesses.
-                    </p>
+                    <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
+                    <p class="text-gray-600">Track your transactions and monitor business performance in real-time.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- How It Works Section -->
-    <div class="py-16 bg-gray-50">
+    <!-- Contact Section -->
+    <div class="py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">How It Works</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <!-- Step 1 -->
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">1</div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Register</h3>
-                    <p class="text-gray-600">Create your account and get your NFC card</p>
-                </div>
-
-                <!-- Step 2 -->
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">2</div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Load Balance</h3>
-                    <p class="text-gray-600">Add money to your wallet easily</p>
-                </div>
-
-                <!-- Step 3 -->
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">3</div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Tap & Pay</h3>
-                    <p class="text-gray-600">Make payments with a simple tap</p>
-                </div>
-
-                <!-- Step 4 -->
-                <div class="text-center">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">4</div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Track</h3>
-                    <p class="text-gray-600">Monitor your transactions easily</p>
-                </div>
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Get Started Today</h2>
+                <p class="text-xl text-gray-600 mb-8">Contact our team to learn more about implementing NFC payments in your business.</p>
+                <a href="mailto:support@nfcpayment.com" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    Contact Us
+                </a>
             </div>
-        </div>
-    </div>
-
-    <!-- CTA Section -->
-    <div class="py-16 bg-blue-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-3xl font-bold text-white mb-6">Ready to Get Started?</h2>
-            <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-                Join thousands of satisfied users who have already switched to our NFC payment system.
-            </p>
-            <a href="{% url 'register' %}" class="inline-block px-8 py-3 bg-white text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors">
-                Create Account Now
-            </a>
         </div>
     </div>
 </div>

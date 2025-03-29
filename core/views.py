@@ -7,7 +7,6 @@ from .error_handlers import (
 
 from .page_views import (
     home,
-    register,
     profile,
     privacy,
     terms,
@@ -23,7 +22,6 @@ from .page_views import (
 )
 
 from .api_views import (
-    register_user,
     request_password_reset,
     reset_password,
     UserViewSet,
@@ -33,6 +31,10 @@ from .api_views import (
     SettlementViewSet,
     AdminDashboardViewSet
 )
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 # Export all views
 __all__ = [
@@ -44,7 +46,6 @@ __all__ = [
     
     # Page Views
     'home',
-    'register',
     'profile',
     'privacy',
     'terms',
@@ -59,7 +60,6 @@ __all__ = [
     'outlet_settlements',
     
     # API Views
-    'register_user',
     'request_password_reset',
     'reset_password',
     'UserViewSet',
@@ -69,3 +69,6 @@ __all__ = [
     'SettlementViewSet',
     'AdminDashboardViewSet'
 ]
+
+def home(request):
+    return render(request, 'core/home.html')

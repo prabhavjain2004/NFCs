@@ -58,7 +58,6 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Card Details</label>
                             <div id="cardDetails" class="hidden bg-gray-50 rounded-lg p-4 space-y-2">
                                 <p><span class="font-medium">Card ID:</span> <span id="cardId">-</span></p>
-                                <p><span class="font-medium">Customer:</span> <span id="cardCustomer">-</span></p>
                                 <p><span class="font-medium">Current Balance:</span> ₹<span id="currentBalance">0.00</span></p>
                             </div>
                         </div>
@@ -90,7 +89,6 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operation</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                             </tr>
@@ -124,24 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let firstScanComplete = false;
     let cardData = null;
 
-    // Load customers for the select dropdown
-    function loadCustomers() {
-        axios.get('/api/users/?type=customer')
-            .then(response => {
-                const select = document.getElementById('customerSelect');
-                select.innerHTML = '<option value="">Select Customer</option>';
-                response.data.forEach(customer => {
-                    select.innerHTML += `
-                        <option value="${customer.id}">${customer.username} - ${customer.first_name} ${customer.last_name}</option>
-                    `;
-                });
-            })
-            .catch(error => {
-                console.error('Error loading customers:', error);
-                showAlert('Error loading customers', 'error');
-            });
-    }
-
     // Load recent operations
     function loadRecentOperations() {
         axios.get('/api/cards/operations/')
@@ -159,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${op.card_id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${op.customer}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${op.amount}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -170,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tr>
                 `).join('') || `
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                             No recent operations found
                         </td>
                     </tr>
@@ -224,13 +203,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!firstScanComplete) {
             // First scan
             if (currentOperation === 'issue') {
-                // For new card issuance
-                const customerId = document.getElementById('customerSelect').value;
                 const initialBalance = document.getElementById('initialBalance').value;
 
                 axios.post('/api/cards/issue/first-scan/', {
                     nfc_data: event.message,
-                    customer_id: customerId,
                     initial_balance: initialBalance
                 })
                 .then(response => {
@@ -252,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => {
                     cardData = response.data;
                     document.getElementById('cardId').textContent = cardData.card_id;
-                    document.getElementById('cardCustomer').textContent = cardData.customer;
                     document.getElementById('currentBalance').textContent = cardData.balance;
                     document.getElementById('cardDetails').classList.remove('hidden');
                     document.getElementById('processingModal').classList.add('hidden');
@@ -323,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Initialize
-    loadCustomers();
     loadRecentOperations();
 
     // Refresh operations periodically
