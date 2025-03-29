@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Privacy Policy - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-body">
+            <h1 class="mb-4">Privacy Policy</h1>
+            <p class="text-muted">Last updated: {% now "F d, Y" %}</p>
+
+            <section class="mb-4">
+                <h2>1. Information We Collect</h2>
+                <p>We collect several types of information for various purposes to provide and improve our service to you:</p>
+                <ul>
+                    <li><strong>Personal Information:</strong> Name, email address, phone number, and billing information</li>
+                    <li><strong>Transaction Data:</strong> Details about payments and other transactions made through our system</li>
+                    <li><strong>Technical Data:</strong> IP address, browser type, device information, and cookies</li>
+                    <li><strong>Usage Data:</strong> Information about how you use our service</li>
+                </ul>
+            </section>
+
+            <section class="mb-4">
+                <h2>2. How We Use Your Information</h2>
+                <p>We use the collected information for various purposes:</p>
+                <ul>
+                    <li>To provide and maintain our service</li>
+                    <li>To process your transactions</li>
+                    <li>To notify you about changes to our service</li>
+                    <li>To provide customer support</li>
+                    <li>To detect, prevent and address technical issues</li>
+                    <li>To comply with legal obligations</li>
+                </ul>
+            </section>
+
+            <section class="mb-4">
+                <h2>3. Data Security</h2>
+                <p>We implement robust security measures to protect your personal information:</p>
+                <ul>
+                    <li>End-to-end encryption for all transactions</li>
+                    <li>Secure storage of NFC card data</li>
+                    <li>Regular security audits and updates</li>
+                    <li>Strict access controls and authentication procedures</li>
+                </ul>
+            </section>
+
+            <section class="mb-4">
+                <h2>4. Data Retention</h2>
+                <p>We will retain your personal information only for as long as is necessary for the purposes set out in this policy. We will retain and use your information to the extent necessary to comply with our legal obligations, resolve disputes, and enforce our policies.</p>
+            </section>
+
+            <section class="mb-4">
+                <h2>5. Your Data Protection Rights</h2>
+                <p>Under data protection laws, you have rights including:</p>
+                <ul>
+                    <li>The right to access your personal data</li>
+                    <li>The right to correct your personal data</li>
+                    <li>The right to request deletion of your personal data</li>
+                    <li>The right to restrict processing of your personal data</li>
+                    <li>The right to data portability</li>
+                </ul>
+            </section>
+
+            <section class="mb-4">
+                <h2>6. Third-Party Services</h2>
+                <p>Our service may contain links to third-party websites. We are not responsible for the privacy practices or content of these third-party sites. We encourage you to review the privacy policies of any third-party sites you visit.</p>
+            </section>
+
+            <section class="mb-4">
+                <h2>7. Changes to This Policy</h2>
+                <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date at the top of this policy.</p>
+            </section>
+
+            <section class="mb-4">
+                <h2>8. Contact Us</h2>
+                <p>If you have any questions about this Privacy Policy, please contact us:</p>
+                <ul>
+                    <li>By email: privacy@nfcpaymentsystem.com</li>
+                    <li>By phone: +1 (555) 123-4567</li>
+                    <li>By mail: 123 Payment Street, Tech City, TC 12345</li>
+                </ul>
+            </section>
+
+            <div class="alert alert-info">
+                <h4 class="alert-heading">Your Privacy Matters</h4>
+                <p class="mb-0">We are committed to protecting your privacy and ensuring the security of your personal information. If you have any concerns or questions about how we handle your data, please don't hesitate to contact us.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

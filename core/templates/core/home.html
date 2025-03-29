@@ -1,10 +1,213 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Home - My Django App{% endblock %}
+{% block title %}Welcome - NFC Payment System{% endblock %}
 
 {% block content %}
-    <div class="text-center">
-        <h1>Welcome to My Django App</h1>
-        <p>This is the home page.</p>
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5 rounded-3 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 fw-bold">Secure NFC Payment System</h1>
+                <p class="lead">Experience the future of contactless payments with our secure and efficient NFC payment solution.</p>
+                {% if not user.is_authenticated %}
+                    <div class="mt-4">
+                        <button class="btn btn-light btn-lg me-3" id="loginBtn">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                        <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-credit-card fa-8x"></i>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Key Features</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Secure Transactions</h5>
+                    <p class="card-text">End-to-end encrypted payments with two-step verification for maximum security.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Instant Payments</h5>
+                    <p class="card-text">Quick and seamless transactions using NFC technology for contactless payments.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Real-time Analytics</h5>
+                    <p class="card-text">Comprehensive dashboard with transaction history and analytics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works -->
+<div class="bg-light py-5 mb-5">
+    <div class="container">
+        <h2 class="text-center mb-4">How It Works</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">1</span>
+                    </div>
+                    <h5>Get Your NFC Card</h5>
+                    <p>Register and receive your secure NFC payment card.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">2</span>
+                    </div>
+                    <h5>Top Up Balance</h5>
+                    <p>Add funds to your card through our secure platform.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">3</span>
+                    </div>
+                    <h5>Make Payments</h5>
+                    <p>Use your card at any registered outlet for instant payments.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <span class="h4 mb-0">4</span>
+                    </div>
+                    <h5>Track Transactions</h5>
+                    <p>Monitor your spending through the dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Types -->
+<div class="container mb-5">
+    <h2 class="text-center mb-4">Who Can Use It?</h2>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-user text-primary me-2"></i>Customers
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Make secure payments</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Track expenses</li>
+                        <li><i class="fas fa-check text-success me-2"></i>View transaction history</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Manage card balance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-store text-primary me-2"></i>Outlets
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Accept NFC payments</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Track sales</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Manage settlements</li>
+                        <li><i class="fas fa-check text-success me-2"></i>View analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-user-shield text-primary me-2"></i>Administrators
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Issue NFC cards</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Manage users</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Handle settlements</li>
+                        <li><i class="fas fa-check text-success me-2"></i>System analytics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Check Balance Section -->
+<div class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 text-center">
+                <h2 class="mb-4">Check Your Card Balance</h2>
+                <form id="balanceCheckForm" class="card p-4">
+                    <div class="mb-3">
+                        <label for="cardNumber" class="form-label">Card Number</label>
+                        <input type="text" class="form-control" id="cardNumber" placeholder="Enter your card number" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Check Balance
+                    </button>
+                </form>
+                <div id="balanceResult" class="mt-3 d-none">
+                    <div class="alert alert-info">
+                        Current Balance: <strong>₹<span id="currentBalance">0.00</span></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const balanceCheckForm = document.getElementById('balanceCheckForm');
+    const balanceResult = document.getElementById('balanceResult');
+    const currentBalance = document.getElementById('currentBalance');
+
+    if (balanceCheckForm) {
+        balanceCheckForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const cardNumber = document.getElementById('cardNumber').value;
+
+            try {
+                const response = await axios.get(`/api/cards/${cardNumber}/balance/`);
+                currentBalance.textContent = response.data.balance.toFixed(2);
+                balanceResult.classList.remove('d-none');
+            } catch (error) {
+                alert('Error checking balance. Please verify your card number.');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

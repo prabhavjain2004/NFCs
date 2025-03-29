@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
+                            <i class="fas fa-user fa-3x text-primary"></i>
+                        </div>
+                        <h4>{{ user.get_full_name }}</h4>
+                        <span class="badge bg-primary">{{ user.user_type|title }}</span>
+                    </div>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <i class="fas fa-user me-2"></i>Username: {{ user.username }}
+                        </li>
+                        <li class="list-group-item">
+                            <i class="fas fa-envelope me-2"></i>Email: {{ user.email }}
+                        </li>
+                        {% if user.user_type == 'outlet' %}
+                            <li class="list-group-item">
+                                <i class="fas fa-store me-2"></i>Outlet Name: {{ user.outlet.name }}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="fas fa-map-marker-alt me-2"></i>Address: {{ user.outlet.address }}
+                            </li>
+                        {% endif %}
+                        <li class="list-group-item">
+                            <i class="fas fa-clock me-2"></i>Member since: {{ user.date_joined|date:"M d, Y" }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Settings -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Update Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form id="profileUpdateForm">
+                        <div class="row g-3">
+                            {% if user.user_type == 'customer' %}
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
+                                </div>
+                            {% elif user.user_type == 'outlet' %}
+                                <div class="col-12">
+                                    <label class="form-label">Outlet Name</label>
+                                    <input type="text" class="form-control" name="outlet_name" value="{{ user.outlet.name }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <textarea class="form-control" name="address" rows="3">{{ user.outlet.address }}</textarea>
+                                </div>
+                            {% endif %}
+                            <div class="col-12">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ user.email }}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" value="{{ user.phone }}">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Security Settings</h5>
+                </div>
+                <div class="card-body">
+                    <form id="passwordUpdateForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-control" name="current_password" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" name="new_password" required>
+                                <div class="form-text">Must be at least 8 characters long.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" name="confirm_password" required>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-2"></i>Change Password
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Two-Factor Authentication -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Two-Factor Authentication</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enable2FA" {% if user.two_factor_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="enable2FA">Enable Two-Factor Authentication</label>
+                    </div>
+                    <div id="2faSetup" class="d-none">
+                        <div class="alert alert-info">
+                            <h6>Setup Instructions:</h6>
+                            <ol class="mb-0">
+                                <li>Install an authenticator app (Google Authenticator, Authy, etc.)</li>
+                                <li>Scan the QR code below</li>
+                                <li>Enter the verification code to complete setup</li>
+                            </ol>
+                        </div>
+                        <div class="text-center mb-3">
+                            <img id="qrCode" src="" alt="QR Code" class="img-fluid">
+                        </div>
+                        <form id="2faVerificationForm">
+                            <div class="mb-3">
+                                <label class="form-label">Verification Code</label>
+                                <input type="text" class="form-control" name="verification_code" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-2"></i>Verify and Enable
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const profileUpdateForm = document.getElementById('profileUpdateForm');
+    const passwordUpdateForm = document.getElementById('passwordUpdateForm');
+    const enable2FA = document.getElementById('enable2FA');
+    const twoFASetup = document.getElementById('2faSetup');
+    const twoFAVerificationForm = document.getElementById('2faVerificationForm');
+
+    // Profile Update
+    profileUpdateForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+            const formData = new FormData(this);
+            const response = await axios.post('/api/users/profile/update/', 
+                Object.fromEntries(formData),
+                { headers: window.authManager.getAuthHeaders() }
+            );
+            
+            showAlert('Profile updated successfully', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } catch (error) {
+            showAlert(error.response?.data?.message || 'Failed to update profile', 'danger');
+        }
+    });
+
+    // Password Update
+    passwordUpdateForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        if (formData.get('new_password') !== formData.get('confirm_password')) {
+            showAlert('New passwords do not match', 'danger');
+            return;
+        }
+
+        try {
+            const response = await axios.post('/api/users/password/change/',
+                Object.fromEntries(formData),
+                { headers: window.authManager.getAuthHeaders() }
+            );
+            
+            showAlert('Password changed successfully', 'success');
+            this.reset();
+        } catch (error) {
+            showAlert(error.response?.data?.message || 'Failed to change password', 'danger');
+        }
+    });
+
+    // Two-Factor Authentication
+    enable2FA.addEventListener('change', async function() {
+        if (this.checked) {
+            try {
+                const response = await axios.post('/api/users/2fa/setup/',
+                    {},
+                    { headers: window.authManager.getAuthHeaders() }
+                );
+                
+                document.getElementById('qrCode').src = response.data.qr_code;
+                twoFASetup.classList.remove('d-none');
+            } catch (error) {
+                showAlert('Failed to setup 2FA', 'danger');
+                this.checked = false;
+            }
+        } else {
+            if (confirm('Are you sure you want to disable two-factor authentication?')) {
+                try {
+                    await axios.post('/api/users/2fa/disable/',
+                        {},
+                        { headers: window.authManager.getAuthHeaders() }
+                    );
+                    
+                    twoFASetup.classList.add('d-none');
+                    showAlert('Two-factor authentication disabled', 'success');
+                } catch (error) {
+                    showAlert('Failed to disable 2FA', 'danger');
+                    this.checked = true;
+                }
+            } else {
+                this.checked = true;
+            }
+        }
+    });
+
+    // 2FA Verification
+    twoFAVerificationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        try {
+            const formData = new FormData(this);
+            const response = await axios.post('/api/users/2fa/verify/',
+                Object.fromEntries(formData),
+                { headers: window.authManager.getAuthHeaders() }
+            );
+            
+            showAlert('Two-factor authentication enabled successfully', 'success');
+            twoFASetup.classList.add('d-none');
+        } catch (error) {
+            showAlert('Invalid verification code', 'danger');
+        }
+    });
+
+    function showAlert(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertBefore(alert, document.querySelector('.row'));
+        
+        setTimeout(() => {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 150);
+        }, 3000);
+    }
+
+    // Password strength validation
+    document.querySelector('input[name="new_password"]').addEventListener('input', function() {
+        const password = this.value;
+        const strength = validatePasswordStrength(password);
+        
+        this.classList.remove('is-valid', 'is-invalid');
+        if (password) {
+            this.classList.add(strength.isValid ? 'is-valid' : 'is-invalid');
+            this.nextElementSibling.textContent = strength.message;
+        }
+    });
+
+    function validatePasswordStrength(password) {
+        if (password.length < 8) {
+            return {
+                isValid: false,
+                message: 'Password must be at least 8 characters long'
+            };
+        }
+
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
+            .filter(Boolean).length;
+
+        if (strength < 3) {
+            return {
+                isValid: false,
+                message: 'Password must contain uppercase, lowercase, numbers, and special characters'
+            };
+        }
+
+        return {
+            isValid: true,
+            message: 'Password strength: Strong'
+        };
+    }
+});
+</script>
+{% endblock %}

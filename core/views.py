@@ -1,10 +1,65 @@
-from django.contrib.auth import authenticate
-from rest_framework.response import Response
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Card, Transaction
-from django.shortcuts import render
+from .error_handlers import (
+    bad_request,
+    permission_denied,
+    page_not_found,
+    server_error
+)
 
-def home(request):
-    return render(request, "core/home.html")
+from .page_views import (
+    home,
+    register,
+    profile,
+    privacy,
+    terms,
+    password_reset,
+    transactions,
+    customer_dashboard,
+    outlet_dashboard,
+    admin_dashboard,
+    card_management
+)
+
+from .api_views import (
+    register_user,
+    request_password_reset,
+    reset_password,
+    UserViewSet,
+    OutletViewSet,
+    CardViewSet,
+    TransactionViewSet,
+    SettlementViewSet,
+    AdminDashboardViewSet
+)
+
+# Export all views
+__all__ = [
+    # Error Handlers
+    'bad_request',
+    'permission_denied',
+    'page_not_found',
+    'server_error',
+    
+    # Page Views
+    'home',
+    'register',
+    'profile',
+    'privacy',
+    'terms',
+    'password_reset',
+    'transactions',
+    'customer_dashboard',
+    'outlet_dashboard',
+    'admin_dashboard',
+    'card_management',
+    
+    # API Views
+    'register_user',
+    'request_password_reset',
+    'reset_password',
+    'UserViewSet',
+    'OutletViewSet',
+    'CardViewSet',
+    'TransactionViewSet',
+    'SettlementViewSet',
+    'AdminDashboardViewSet'
+]

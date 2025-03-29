@@ -1,0 +1,23 @@
+{% extends 'core/errors/base_error.html' %}
+
+{% block title %}400 Bad Request - NFC Payment System{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Common Causes:</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Invalid form submission</li>
+                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Malformed request data</li>
+                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Invalid API parameters</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create an Account</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Role Selection -->
+                    <div class="mb-4">
+                        <h5>Select Account Type</h5>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="userType" id="customerBtn" value="customer" checked>
+                            <label class="btn btn-outline-primary" for="customerBtn">
+                                <i class="fas fa-user me-2"></i>Customer
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="userType" id="outletBtn" value="outlet">
+                            <label class="btn btn-outline-primary" for="outletBtn">
+                                <i class="fas fa-store me-2"></i>Outlet/Merchant
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Customer Registration Form -->
+                    <form id="customerForm" class="registration-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username" required>
+                                <div class="form-text">Choose a unique username for login.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                                <div class="form-text">Must be at least 8 characters long.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" name="confirm_password" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Outlet Registration Form -->
+                    <form id="outletForm" class="registration-form d-none">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Outlet Name</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Business Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" name="username" required>
+                                <div class="form-text">Choose a unique username for login.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                                <div class="form-text">Must be at least 8 characters long.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" name="confirm_password" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Contact Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address" rows="3" required></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Business Type</label>
+                                <select class="form-select" name="business_type" required>
+                                    <option value="">Select Business Type</option>
+                                    <option value="retail">Retail Store</option>
+                                    <option value="restaurant">Restaurant</option>
+                                    <option value="service">Service Provider</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tax ID/GST Number</label>
+                                <input type="text" class="form-control" name="tax_id">
+                                <div class="form-text">Optional for small businesses</div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Common Form Elements -->
+                    <div class="mt-4">
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label" for="termsCheck">
+                                I agree to the <a href="{% url 'terms' %}" target="_blank">Terms of Service</a> and 
+                                <a href="{% url 'privacy' %}" target="_blank">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <div id="registrationStatus" class="alert d-none mb-3"></div>
+
+                        <button type="button" id="registerBtn" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>Register
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        Already have an account? 
+                        <a href="#" id="loginBtn">Login here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customerForm = document.getElementById('customerForm');
+    const outletForm = document.getElementById('outletForm');
+    const registerBtn = document.getElementById('registerBtn');
+    const statusDiv = document.getElementById('registrationStatus');
+
+    // Toggle between customer and outlet forms
+    document.querySelectorAll('input[name="userType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'customer') {
+                customerForm.classList.remove('d-none');
+                outletForm.classList.add('d-none');
+            } else {
+                customerForm.classList.add('d-none');
+                outletForm.classList.remove('d-none');
+            }
+        });
+    });
+
+    // Form validation and submission
+    registerBtn.addEventListener('click', async function() {
+        const userType = document.querySelector('input[name="userType"]:checked').value;
+        const form = userType === 'customer' ? customerForm : outletForm;
+        
+        if (!validateForm(form)) {
+            return;
+        }
+
+        try {
+            const formData = new FormData(form);
+            const data = {
+                user_type: userType,
+                ...Object.fromEntries(formData.entries())
+            };
+
+            // Check password match
+            if (data.password !== data.confirm_password) {
+                showStatus('Passwords do not match', 'danger');
+                return;
+            }
+
+            // Terms check
+            if (!document.getElementById('termsCheck').checked) {
+                showStatus('Please accept the Terms of Service and Privacy Policy', 'danger');
+                return;
+            }
+
+            const response = await axios.post('/api/register/', data);
+            
+            showStatus('Registration successful! Redirecting to login...', 'success');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            showStatus(error.response?.data?.message || 'Registration failed. Please try again.', 'danger');
+        }
+    });
+
+    function validateForm(form) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            showStatus('Please fill in all required fields', 'danger');
+        }
+
+        return isValid;
+    }
+
+    function showStatus(message, type) {
+        statusDiv.className = `alert alert-${type}`;
+        statusDiv.textContent = message;
+        statusDiv.classList.remove('d-none');
+    }
+
+    // Password strength validation
+    document.querySelectorAll('input[name="password"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const password = this.value;
+            const strength = validatePasswordStrength(password);
+            
+            this.classList.remove('is-valid', 'is-invalid');
+            if (password) {
+                this.classList.add(strength.isValid ? 'is-valid' : 'is-invalid');
+                this.nextElementSibling.textContent = strength.message;
+            }
+        });
+    });
+
+    function validatePasswordStrength(password) {
+        if (password.length < 8) {
+            return {
+                isValid: false,
+                message: 'Password must be at least 8 characters long'
+            };
+        }
+
+        const hasUpperCase = /[A-Z]/.test(password);
+        const hasLowerCase = /[a-z]/.test(password);
+        const hasNumbers = /\d/.test(password);
+        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
+            .filter(Boolean).length;
+
+        if (strength < 3) {
+            return {
+                isValid: false,
+                message: 'Password must contain uppercase, lowercase, numbers, and special characters'
+            };
+        }
+
+        return {
+            isValid: true,
+            message: 'Password strength: Strong'
+        };
+    }
+});
+</script>
+{% endblock %}

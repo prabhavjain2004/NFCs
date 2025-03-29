@@ -1,0 +1,109 @@
+{% extends 'core/errors/base_error.html' %}
+
+{% block title %}500 Internal Server Error - NFC Payment System{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">What happened?</h5>
+                    <p class="card-text">Our server encountered an unexpected condition that prevented it from fulfilling your request.</p>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>What you can do:</h6>
+                        <ul class="mb-0">
+                            <li>Refresh the page and try again</li>
+                            <li>Clear your browser cache and cookies</li>
+                            <li>Try again in a few minutes</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Note:</h6>
+                        <p class="mb-0">If you were in the middle of a transaction, please check your account balance and transaction history to verify the status before trying again.</p>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <p>If the problem persists, please contact our support team:</p>
+                        <div class="row justify-content-center g-3">
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <a href="mailto:support@nfcpaymentsystem.com" class="btn btn-outline-primary">
+                                        <i class="fas fa-envelope me-2"></i>Email Support
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <a href="tel:+1-555-123-4567" class="btn btn-outline-primary">
+                                        <i class="fas fa-phone me-2"></i>Call Support
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Quick Links</h5>
+                        <div class="row g-3">
+                            {% if user.user_type == 'customer' %}
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'customer-dashboard' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Your Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'transactions' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-history me-2"></i>Transaction History
+                                        </a>
+                                    </div>
+                                </div>
+                            {% elif user.user_type == 'outlet' %}
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'outlet-dashboard' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-store me-2"></i>Outlet Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'transactions' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-cash-register me-2"></i>Payment History
+                                        </a>
+                                    </div>
+                                </div>
+                            {% elif user.user_type == 'admin' %}
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'admin-dashboard' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-grid">
+                                        <a href="{% url 'card-management' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-credit-card me-2"></i>Card Management
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

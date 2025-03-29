@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Outlet Dashboard - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Payment Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Accept Payment</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="amount" class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control" id="amount" min="1" step="0.01" required>
+                    </div>
+                    <button class="btn btn-primary" id="startPayment">Start Payment</button>
+                </div>
+                <div class="col-md-6">
+                    <div class="payment-status text-center">
+                        <div id="nfcStatus" class="alert alert-info d-none">
+                            Waiting for NFC card...
+                        </div>
+                        <div id="paymentSuccess" class="alert alert-success d-none">
+                            Payment successful!
+                        </div>
+                        <div id="paymentError" class="alert alert-danger d-none">
+                            Payment failed. Please try again.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Summary -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Transactions</h5>
+                    <h2 id="todayTransactions">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Revenue</h5>
+                    <h2 id="todayRevenue">₹0.00</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Settlement</h5>
+                    <h2 id="pendingSettlement">₹0.00</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Transactions</h5>
+            <div class="btn-group">
+                <button class="btn btn-light btn-sm" id="todayFilter">Today</button>
+                <button class="btn btn-light btn-sm" id="weekFilter">This Week</button>
+                <button class="btn btn-light btn-sm" id="monthFilter">This Month</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Amount</th>
+                            <th>Card ID</th>
+                            <th>Status</th>
+                            <th>Settlement Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionHistory">
+                        <!-- Transactions will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Processing Modal -->
+<div class="modal fade" id="paymentModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Processing Payment</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0">Please tap the NFC card to complete payment...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Outlet Dashboard -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPaymentAmount = 0;
+    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+
+    // Start payment process
+    document.getElementById('startPayment').addEventListener('click', function() {
+        const amount = document.getElementById('amount').value;
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+        currentPaymentAmount = amount;
+        paymentModal.show();
+        startNFCPayment(amount);
+    });
+
+    // NFC Payment Processing
+    function startNFCPayment(amount) {
+        if ('NDEFReader' in window) {
+            const nfcReader = new NDEFReader();
+            nfcReader.scan()
+                .then(() => {
+                    document.getElementById('nfcStatus').classList.remove('d-none');
+                    nfcReader.onreading = event => {
+                        processPayment(event, amount);
+                    };
+                })
+                .catch(error => {
+                    console.error(`Error starting NFC scan: ${error}`);
+                    showPaymentError();
+                });
+        } else {
+            alert('NFC is not supported on this device');
+            paymentModal.hide();
+        }
+    }
+
+    // Process payment with backend
+    function processPayment(nfcEvent, amount) {
+        const token = localStorage.getItem('access_token');
+        axios.post('/api/transactions/', {
+            transaction_type: 'payment',
+            amount: amount,
+            nfc_data: nfcEvent.message
+        }, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            showPaymentSuccess();
+            loadDashboardData();
+        })
+        .catch(error => {
+            console.error('Payment failed:', error);
+            showPaymentError();
+        })
+        .finally(() => {
+            paymentModal.hide();
+        });
+    }
+
+    // Show payment status
+    function showPaymentSuccess() {
+        const successAlert = document.getElementById('paymentSuccess');
+        successAlert.classList.remove('d-none');
+        setTimeout(() => successAlert.classList.add('d-none'), 3000);
+    }
+
+    function showPaymentError() {
+        const errorAlert = document.getElementById('paymentError');
+        errorAlert.classList.remove('d-none');
+        setTimeout(() => errorAlert.classList.add('d-none'), 3000);
+    }
+
+    // Load dashboard data
+    function loadDashboardData() {
+        const token = localStorage.getItem('access_token');
+        
+        // Load today's summary
+        axios.get('/api/outlets/summary/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            document.getElementById('todayTransactions').textContent = response.data.today_transactions;
+            document.getElementById('todayRevenue').textContent = `₹${response.data.today_revenue}`;
+            document.getElementById('pendingSettlement').textContent = `₹${response.data.pending_settlement}`;
+        })
+        .catch(error => {
+            console.error('Error loading summary:', error);
+        });
+
+        // Load transactions
+        loadTransactions('today');
+    }
+
+    // Load transactions based on filter
+    function loadTransactions(filter) {
+        const token = localStorage.getItem('access_token');
+        axios.get(`/api/transactions/?filter=${filter}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('transactionHistory');
+            tbody.innerHTML = '';
+            response.data.forEach(transaction => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(transaction.timestamp).toLocaleTimeString()}</td>
+                        <td>₹${transaction.amount}</td>
+                        <td>${transaction.secure_key}</td>
+                        <td><span class="badge bg-success">Completed</span></td>
+                        <td><span class="badge bg-${transaction.settled ? 'success' : 'warning'}">
+                            ${transaction.settled ? 'Settled' : 'Pending'}
+                        </span></td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading transactions:', error);
+        });
+    }
+
+    // Transaction filter buttons
+    document.getElementById('todayFilter').addEventListener('click', () => loadTransactions('today'));
+    document.getElementById('weekFilter').addEventListener('click', () => loadTransactions('week'));
+    document.getElementById('monthFilter').addEventListener('click', () => loadTransactions('month'));
+
+    // Initial load
+    loadDashboardData();
+
+    // Refresh data every minute
+    setInterval(loadDashboardData, 60000);
+});
+</script>
+{% endblock %}

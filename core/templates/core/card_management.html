@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}NFC Card Management - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Card Management Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">NFC Card Management</h2>
+            <p class="text-muted">Issue new cards and manage recharges securely</p>
+        </div>
+    </div>
+
+    <!-- Two-Step Process Info -->
+    <div class="alert alert-info mb-4">
+        <h5 class="alert-heading">Two-Step Verification Process</h5>
+        <p class="mb-0">For security purposes, all card operations require two NFC scans:</p>
+        <ul class="mb-0">
+            <li>First scan to identify the card</li>
+            <li>Second scan to confirm and complete the operation</li>
+        </ul>
+    </div>
+
+    <!-- Main Operations -->
+    <div class="row">
+        <!-- Issue New Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Issue New Card</h5>
+                </div>
+                <div class="card-body">
+                    <form id="issueCardForm">
+                        <div class="mb-3">
+                            <label class="form-label">Customer</label>
+                            <select class="form-select" id="customerSelect" required>
+                                <option value="">Select Customer</option>
+                                <!-- Customers will be loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Initial Balance (₹)</label>
+                            <input type="number" class="form-control" id="initialBalance" min="0" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <div id="issueCardStatus" class="alert d-none">
+                                <!-- Status messages will appear here -->
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="startIssueBtn">Start Card Issuance</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recharge Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Recharge Card</h5>
+                </div>
+                <div class="card-body">
+                    <form id="rechargeForm">
+                        <div class="mb-3">
+                            <label class="form-label">Card Details</label>
+                            <div id="cardDetails" class="border rounded p-3 bg-light d-none">
+                                <p class="mb-2"><strong>Card ID:</strong> <span id="cardId">-</span></p>
+                                <p class="mb-2"><strong>Customer:</strong> <span id="cardCustomer">-</span></p>
+                                <p class="mb-0"><strong>Current Balance:</strong> ₹<span id="currentBalance">0.00</span></p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Recharge Amount (₹)</label>
+                            <input type="number" class="form-control" id="rechargeAmount" min="1" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <div id="rechargeStatus" class="alert d-none">
+                                <!-- Status messages will appear here -->
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="startRechargeBtn">Start Recharge</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Operations -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Recent Operations</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Operation</th>
+                            <th>Card ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentOperations">
+                        <!-- Operations will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing Modal -->
+<div class="modal fade" id="processingModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="processingTitle">Processing</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mb-0" id="processingMessage">Please wait...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentOperation = null;
+    let firstScanComplete = false;
+    let cardData = null;
+    const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+
+    // Load customers for the select dropdown
+    function loadCustomers() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/users/?type=customer', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const select = document.getElementById('customerSelect');
+            select.innerHTML = '<option value="">Select Customer</option>';
+            response.data.forEach(customer => {
+                select.innerHTML += `
+                    <option value="${customer.id}">${customer.username} - ${customer.first_name} ${customer.last_name}</option>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading customers:', error);
+            showAlert('issueCardStatus', 'Error loading customers', 'danger');
+        });
+    }
+
+    // Load recent operations
+    function loadRecentOperations() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/cards/operations/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('recentOperations');
+            tbody.innerHTML = '';
+            response.data.forEach(op => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(op.timestamp).toLocaleString()}</td>
+                        <td>${op.operation_type}</td>
+                        <td>${op.card_id}</td>
+                        <td>${op.customer}</td>
+                        <td>₹${op.amount}</td>
+                        <td><span class="badge bg-${op.status === 'completed' ? 'success' : 'danger'}">
+                            ${op.status}
+                        </span></td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading operations:', error);
+        });
+    }
+
+    // Show status alert
+    function showAlert(elementId, message, type) {
+        const element = document.getElementById(elementId);
+        element.className = `alert alert-${type}`;
+        element.textContent = message;
+        element.classList.remove('d-none');
+    }
+
+    // Handle NFC operations
+    function startNFCOperation(operation) {
+        if (!('NDEFReader' in window)) {
+            showAlert(`${operation}Status`, 'NFC is not supported on this device', 'danger');
+            return;
+        }
+
+        currentOperation = operation;
+        firstScanComplete = false;
+        processingModal.show();
+
+        const nfcReader = new NDEFReader();
+        nfcReader.scan()
+            .then(() => {
+                document.getElementById('processingMessage').textContent = 
+                    'Please tap the NFC card...';
+                
+                nfcReader.onreading = event => {
+                    handleNFCReading(event);
+                };
+            })
+            .catch(error => {
+                console.error('Error starting NFC scan:', error);
+                processingModal.hide();
+                showAlert(`${operation}Status`, 'Failed to start NFC scan', 'danger');
+            });
+    }
+
+    // Handle NFC reading
+    function handleNFCReading(event) {
+        const token = localStorage.getItem('access_token');
+
+        if (!firstScanComplete) {
+            // First scan
+            if (currentOperation === 'issue') {
+                // For new card issuance
+                const customerId = document.getElementById('customerSelect').value;
+                const initialBalance = document.getElementById('initialBalance').value;
+
+                axios.post('/api/cards/issue/first-scan/', {
+                    nfc_data: event.message,
+                    customer_id: customerId,
+                    initial_balance: initialBalance
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(response => {
+                    cardData = response.data;
+                    firstScanComplete = true;
+                    document.getElementById('processingMessage').textContent = 
+                        'First scan complete. Please tap the card again to confirm...';
+                })
+                .catch(error => {
+                    console.error('Error in first scan:', error);
+                    processingModal.hide();
+                    showAlert('issueCardStatus', 'Error during first scan', 'danger');
+                });
+            } else {
+                // For recharge
+                axios.post('/api/cards/verify/', {
+                    nfc_data: event.message
+                }, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                .then(response => {
+                    cardData = response.data;
+                    document.getElementById('cardId').textContent = cardData.card_id;
+                    document.getElementById('cardCustomer').textContent = cardData.customer;
+                    document.getElementById('currentBalance').textContent = cardData.balance;
+                    document.getElementById('cardDetails').classList.remove('d-none');
+                    processingModal.hide();
+                    firstScanComplete = true;
+                })
+                .catch(error => {
+                    console.error('Error verifying card:', error);
+                    processingModal.hide();
+                    showAlert('rechargeStatus', 'Error verifying card', 'danger');
+                });
+            }
+        } else {
+            // Second scan
+            const endpoint = currentOperation === 'issue' ? 
+                '/api/cards/issue/confirm/' : '/api/cards/recharge/confirm/';
+            
+            const data = currentOperation === 'issue' ? 
+                { nfc_data: event.message, card_data: cardData } :
+                { 
+                    nfc_data: event.message, 
+                    card_id: cardData.card_id,
+                    amount: document.getElementById('rechargeAmount').value 
+                };
+
+            axios.post(endpoint, data, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => {
+                processingModal.hide();
+                showAlert(
+                    `${currentOperation}Status`,
+                    `${currentOperation === 'issue' ? 'Card issued' : 'Recharge completed'} successfully`,
+                    'success'
+                );
+                loadRecentOperations();
+                
+                // Reset forms
+                if (currentOperation === 'issue') {
+                    document.getElementById('issueCardForm').reset();
+                } else {
+                    document.getElementById('rechargeForm').reset();
+                    document.getElementById('cardDetails').classList.add('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error in second scan:', error);
+                processingModal.hide();
+                showAlert(
+                    `${currentOperation}Status`,
+                    'Error completing operation',
+                    'danger'
+                );
+            });
+        }
+    }
+
+    // Event Listeners
+    document.getElementById('issueCardForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        startNFCOperation('issue');
+    });
+
+    document.getElementById('rechargeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!firstScanComplete) {
+            startNFCOperation('recharge');
+        } else {
+            const amount = document.getElementById('rechargeAmount').value;
+            if (!amount || amount <= 0) {
+                showAlert('rechargeStatus', 'Please enter a valid amount', 'danger');
+                return;
+            }
+            startNFCOperation('recharge');
+        }
+    });
+
+    // Initialize
+    loadCustomers();
+    loadRecentOperations();
+
+    // Refresh operations periodically
+    setInterval(loadRecentOperations, 30000);
+});
+</script>
+{% endblock %}

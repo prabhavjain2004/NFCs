@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Dashboard - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Wallet Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Wallet Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2 class="mb-3">Balance: <span id="walletBalance">₹0.00</span></h2>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-success" id="viewCardDetails">View Card Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction History -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Transaction History</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Outlet</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionHistory">
+                        <!-- Transactions will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card Details Modal -->
+<div class="modal fade" id="cardDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">NFC Card Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card-info">
+                    <p><strong>Card ID:</strong> <span id="cardId"></span></p>
+                    <p><strong>Status:</strong> <span id="cardStatus" class="badge bg-success">Active</span></p>
+                    <p><strong>Last Used:</strong> <span id="lastUsed"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Customer Dashboard -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load wallet balance
+    function loadWalletBalance() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/cards/balance/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            document.getElementById('walletBalance').textContent = `₹${response.data.balance}`;
+        })
+        .catch(error => {
+            console.error('Error loading balance:', error);
+        });
+    }
+
+    // Load transaction history
+    function loadTransactionHistory() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/transactions/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('transactionHistory');
+            tbody.innerHTML = '';
+            response.data.forEach(transaction => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(transaction.timestamp).toLocaleDateString()}</td>
+                        <td>${transaction.transaction_type}</td>
+                        <td>₹${transaction.amount}</td>
+                        <td>${transaction.outlet ? transaction.outlet.name : '-'}</td>
+                        <td><span class="badge bg-success">Completed</span></td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading transactions:', error);
+        });
+    }
+
+    // View card details
+    document.getElementById('viewCardDetails').addEventListener('click', function() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/cards/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            if (response.data.length > 0) {
+                const card = response.data[0];
+                document.getElementById('cardId').textContent = card.card_id;
+                document.getElementById('cardStatus').textContent = card.active ? 'Active' : 'Inactive';
+                document.getElementById('cardStatus').className = `badge ${card.active ? 'bg-success' : 'bg-danger'}`;
+                document.getElementById('lastUsed').textContent = 'Not available';
+                new bootstrap.Modal(document.getElementById('cardDetailsModal')).show();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading card details:', error);
+        });
+    });
+
+    // Initial load
+    loadWalletBalance();
+    loadTransactionHistory();
+
+    // Refresh data every 30 seconds
+    setInterval(() => {
+        loadWalletBalance();
+        loadTransactionHistory();
+    }, 30000);
+});
+</script>
+{% endblock %}

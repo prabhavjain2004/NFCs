@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- System Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 id="totalUsers">0</h2>
+                    <div class="mt-2">
+                        <small>Customers: <span id="customerCount">0</span></small><br>
+                        <small>Outlets: <span id="outletCount">0</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Active Cards</h5>
+                    <h2 id="activeCards">0</h2>
+                    <small>Total Value: ₹<span id="totalCardValue">0.00</span></small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Transactions</h5>
+                    <h2 id="todayTransactions">0</h2>
+                    <small>Value: ₹<span id="todayValue">0.00</span></small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Settlements</h5>
+                    <h2 id="pendingSettlements">0</h2>
+                    <small>Value: ₹<span id="settlementValue">0.00</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary me-2" id="issueCardBtn">Issue New Card</button>
+                    <button class="btn btn-success me-2" id="rechargeCardBtn">Recharge Card</button>
+                    <button class="btn btn-info me-2" id="processSettlementsBtn">Process Settlements</button>
+                    <button class="btn btn-warning" id="manageUsersBtn">Manage Users</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#cards">Cards</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#transactions">Transactions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#settlements">Settlements</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#analytics">Analytics</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <!-- Cards Tab -->
+                <div class="tab-pane fade show active" id="cards">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Card ID</th>
+                                    <th>User</th>
+                                    <th>Balance</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cardsList">
+                                <!-- Cards will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Transactions Tab -->
+                <div class="tab-pane fade" id="transactions">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Card ID</th>
+                                    <th>Outlet</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsList">
+                                <!-- Transactions will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settlements Tab -->
+                <div class="tab-pane fade" id="settlements">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Outlet</th>
+                                    <th>Amount</th>
+                                    <th>Transactions</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="settlementsList">
+                                <!-- Settlements will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div class="tab-pane fade" id="analytics">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="transactionChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Issue Card Modal -->
+<div class="modal fade" id="issueCardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Issue New Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="issueCardForm">
+                    <div class="mb-3">
+                        <label class="form-label">Select User</label>
+                        <select class="form-select" id="userSelect" required>
+                            <!-- Users will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Initial Balance</label>
+                        <input type="number" class="form-control" id="initialBalance" min="0" step="0.01" required>
+                    </div>
+                    <div id="nfcScanStatus" class="alert alert-info d-none">
+                        Please scan the NFC card...
+                    </div>
+                    <button type="submit" class="btn btn-primary">Issue Card</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recharge Card Modal -->
+<div class="modal fade" id="rechargeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Recharge Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rechargeForm">
+                    <div class="mb-3">
+                        <label class="form-label">Card ID</label>
+                        <input type="text" class="form-control" id="cardIdRecharge" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="rechargeAmount" min="1" step="0.01" required>
+                    </div>
+                    <div id="rechargeScanStatus" class="alert alert-info d-none">
+                        Please scan the card to confirm recharge...
+                    </div>
+                    <button type="submit" class="btn btn-success">Recharge</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Admin Dashboard -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load dashboard data
+    function loadDashboardData() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/admin-dashboard/summary/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            // Update system overview
+            document.getElementById('totalUsers').textContent = response.data.total_users;
+            document.getElementById('customerCount').textContent = response.data.customer_count;
+            document.getElementById('outletCount').textContent = response.data.outlet_count;
+            document.getElementById('activeCards').textContent = response.data.active_cards;
+            document.getElementById('totalCardValue').textContent = response.data.total_card_value;
+            document.getElementById('todayTransactions').textContent = response.data.today_transactions;
+            document.getElementById('todayValue').textContent = response.data.today_value;
+            document.getElementById('pendingSettlements').textContent = response.data.pending_settlements;
+            document.getElementById('settlementValue').textContent = response.data.settlement_value;
+        })
+        .catch(error => {
+            console.error('Error loading dashboard data:', error);
+        });
+    }
+
+    // Load cards list
+    function loadCards() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/cards/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('cardsList');
+            tbody.innerHTML = '';
+            response.data.forEach(card => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${card.card_id}</td>
+                        <td>${card.user}</td>
+                        <td>₹${card.balance}</td>
+                        <td>
+                            <span class="badge bg-${card.active ? 'success' : 'danger'}">
+                                ${card.active ? 'Active' : 'Inactive'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-success me-1" onclick="rechargeCard('${card.card_id}')">
+                                Recharge
+                            </button>
+                            <button class="btn btn-sm btn-${card.active ? 'danger' : 'success'}" 
+                                    onclick="toggleCardStatus('${card.card_id}', ${card.active})">
+                                ${card.active ? 'Deactivate' : 'Activate'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading cards:', error);
+        });
+    }
+
+    // Load transactions
+    function loadTransactions() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/transactions/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('transactionsList');
+            tbody.innerHTML = '';
+            response.data.forEach(transaction => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${new Date(transaction.timestamp).toLocaleString()}</td>
+                        <td>${transaction.transaction_type}</td>
+                        <td>₹${transaction.amount}</td>
+                        <td>${transaction.secure_key}</td>
+                        <td>${transaction.outlet ? transaction.outlet.name : '-'}</td>
+                        <td><span class="badge bg-success">Completed</span></td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading transactions:', error);
+        });
+    }
+
+    // Load settlements
+    function loadSettlements() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/settlements/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            const tbody = document.getElementById('settlementsList');
+            tbody.innerHTML = '';
+            response.data.forEach(settlement => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${settlement.outlet.name}</td>
+                        <td>₹${settlement.amount}</td>
+                        <td>${settlement.transaction_count}</td>
+                        <td>
+                            <span class="badge bg-${settlement.status === 'completed' ? 'success' : 'warning'}">
+                                ${settlement.status}
+                            </span>
+                        </td>
+                        <td>
+                            ${settlement.status === 'pending' ? 
+                                `<button class="btn btn-sm btn-success" 
+                                         onclick="processSettlement(${settlement.id})">
+                                    Process
+                                </button>` : 
+                                '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading settlements:', error);
+        });
+    }
+
+    // Initialize charts
+    function initializeCharts() {
+        const token = localStorage.getItem('access_token');
+        axios.get('/api/admin-dashboard/analytics/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => {
+            // Transaction Chart
+            new Chart(document.getElementById('transactionChart'), {
+                type: 'line',
+                data: {
+                    labels: response.data.transaction_labels,
+                    datasets: [{
+                        label: 'Daily Transactions',
+                        data: response.data.transaction_data,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                }
+            });
+
+            // Revenue Chart
+            new Chart(document.getElementById('revenueChart'), {
+                type: 'bar',
+                data: {
+                    labels: response.data.revenue_labels,
+                    datasets: [{
+                        label: 'Daily Revenue',
+                        data: response.data.revenue_data,
+                        backgroundColor: 'rgb(54, 162, 235)'
+                    }]
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading analytics:', error);
+        });
+    }
+
+    // Event Listeners
+    document.getElementById('issueCardBtn').addEventListener('click', function() {
+        new bootstrap.Modal(document.getElementById('issueCardModal')).show();
+    });
+
+    document.getElementById('rechargeCardBtn').addEventListener('click', function() {
+        new bootstrap.Modal(document.getElementById('rechargeModal')).show();
+    });
+
+    // Initialize dashboard
+    loadDashboardData();
+    loadCards();
+    loadTransactions();
+    loadSettlements();
+    initializeCharts();
+
+    // Refresh data periodically
+    setInterval(loadDashboardData, 30000);
+    setInterval(loadCards, 60000);
+    setInterval(loadTransactions, 60000);
+    setInterval(loadSettlements, 60000);
+});
+
+// Card Management Functions
+function rechargeCard(cardId) {
+    document.getElementById('cardIdRecharge').value = cardId;
+    new bootstrap.Modal(document.getElementById('rechargeModal')).show();
+}
+
+function toggleCardStatus(cardId, currentStatus) {
+    const token = localStorage.getItem('access_token');
+    axios.post(`/api/cards/${cardId}/toggle/`, {
+        active: !currentStatus
+    }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(() => {
+        loadCards();
+    })
+    .catch(error => {
+        console.error('Error toggling card status:', error);
+        alert('Failed to update card status');
+    });
+}
+
+function processSettlement(settlementId) {
+    const token = localStorage.getItem('access_token');
+    axios.post(`/api/settlements/${settlementId}/process/`, {}, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(() => {
+        loadSettlements();
+        loadDashboardData();
+    })
+    .catch(error => {
+        console.error('Error processing settlement:', error);
+        alert('Failed to process settlement');
+    });
+}
+</script>
+{% endblock %}
