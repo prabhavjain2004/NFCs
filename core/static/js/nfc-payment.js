@@ -51,6 +51,15 @@ class NFCPaymentProcessor {
                 throw new Error('Card is inactive');
             }
 
+            // Additional security checks
+            if (this.currentTransaction.amount > cardVerification.transaction_limit) {
+                throw new Error('Transaction amount exceeds limit');
+            }
+
+            if (Date.now() - new Date(cardVerification.last_used).getTime() < 2000) {
+                throw new Error('Duplicate transaction detected');
+            }
+
             if (cardVerification.balance < this.currentTransaction.amount) {
                 throw new Error('Insufficient balance');
             }

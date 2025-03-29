@@ -141,14 +141,21 @@ class CardViewSet(viewsets.ModelViewSet):
     def issue(self, request):
         initial_balance = Decimal(request.data.get('initial_balance', 0))
         secure_key = str(uuid.uuid4().hex)[:16]
-        card_id = str(uuid.uuid4().hex)[:8].upper()  # Generate a random 8-character card ID
+        card_id = str(uuid.uuid4().hex)[:8].upper()
+        customer_name = request.data.get('customer_name')
+        customer_mobile = request.data.get('customer_mobile')
+        user_id = request.data.get('user_id')
         
         try:
+            user = User.objects.get(id=user_id)
             card = Card.objects.create(
                 card_id=card_id,
                 secure_key=secure_key,
                 balance=initial_balance,
-                active=True
+                active=True,
+                customer_name=customer_name,
+                customer_mobile=customer_mobile,
+                user=user
             )
             
             return Response({
@@ -205,6 +212,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
         else:
             transactions = Transaction.objects.all()
 
+        return Response(self.get_serializer(transactions, many=True).data)
+
+    @action(detail=False, methods=['get'])
+    def realtime(self, request):
+        last_hour = timezone.now() - timedelta(hours=1)
+        transactions = Transaction.objects.filter(
+            timestamp__gte=last_hour
+        ).order_by('-timestamp')
         return Response(self.get_serializer(transactions, many=True).data)
 
 class SettlementViewSet(viewsets.ModelViewSet):

@@ -3,6 +3,8 @@ from django.db import models
 import uuid
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from cryptography.fernet import Fernet
+from django.conf import settings
 
 class User(AbstractUser):
     USER_TYPES = (('outlet', 'Outlet'), ('admin', 'Admin'))
@@ -74,9 +76,27 @@ class Card(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
+    customer_name = models.CharField(max_length=255, default='Unknown Customer')
+    customer_mobile = models.CharField(max_length=15, default='0000000000')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cards')
 
     def __str__(self):
         return f"Card {self.card_id}"
+
+    def encrypt_data(self, data):
+        key = settings.ENCRYPTION_KEY
+        fernet = Fernet(key)
+        return fernet.encrypt(data.encode())
+
+    def decrypt_data(self, encrypted_data):
+        key = settings.ENCRYPTION_KEY
+        fernet = Fernet(key)
+        return fernet.decrypt(encrypted_data).decode()
+
+    def save(self, *args, **kwargs):
+        if self.customer_mobile:
+            self.customer_mobile = self.encrypt_data(self.customer_mobile)
+        super().save(*args, **kwargs)
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = (
