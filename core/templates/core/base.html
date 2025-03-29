@@ -39,10 +39,6 @@
                         {% elif user.is_outlet %}
                             <a href="{% url 'outlet_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
                             <a href="{% url 'outlet_settlements' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
-                        {% else %}
-                            <a href="{% url 'customer_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                            <a href="{% url 'transactions' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Transactions</a>
-                            <a href="{% url 'cards' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Cards</a>
                         {% endif %}
                         
                         <!-- User Menu -->
@@ -82,10 +78,6 @@
                     {% elif user.is_outlet %}
                         <a href="{% url 'outlet_dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
                         <a href="{% url 'outlet_settlements' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
-                    {% else %}
-                        <a href="{% url 'customer_dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
-                        <a href="{% url 'transactions' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Transactions</a>
-                        <a href="{% url 'cards' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Cards</a>
                     {% endif %}
                     <a href="{% url 'profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Profile</a>
                     <a href="{% url 'logout' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Logout</a>

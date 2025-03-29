@@ -45,17 +45,15 @@ class CardOperationsHandler {
         try {
             await this.rateLimiter.checkLimit();
             
-            const customerId = document.getElementById('customerSelect').value;
             const initialBalance = parseFloat(document.getElementById('initialBalance').value);
 
-            if (!customerId || isNaN(initialBalance) || initialBalance < 0) {
-                throw new Error('Invalid input parameters');
+            if (isNaN(initialBalance) || initialBalance < 0) {
+                throw new Error('Invalid initial balance');
             }
 
             this.operationInProgress = true;
             this.currentOperation = {
                 type: 'issuance',
-                customerId: customerId,
                 initialBalance: initialBalance,
                 operationId: this.generateOperationId()
             };
@@ -137,7 +135,6 @@ class CardOperationsHandler {
     async processFirstScanIssuance(nfcData) {
         const response = await axios.post('/api/cards/issue/first-scan/', {
             nfc_data: nfcData,
-            customer_id: this.currentOperation.customerId,
             initial_balance: this.currentOperation.initialBalance,
             operation_id: this.currentOperation.operationId
         }, {

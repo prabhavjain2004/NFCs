@@ -10,49 +10,113 @@ from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+from django.db import transaction
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
-    user_type = request.data.get('user_type')
-    if user_type not in ['customer', 'outlet']:
-        return Response({'error': 'Invalid user type'}, status=status.HTTP_400_BAD_REQUEST)
-
+    """
+    Register a new user (customer or outlet)
+    """
     try:
-        user_data = {
-            'username': request.data.get('username'),
-            'email': request.data.get('email'),
-            'password': request.data.get('password'),
-            'user_type': user_type
-        }
+        with transaction.atomic():
+            # Extract common fields
+            username = request.data.get('username')
+            email = request.data.get('email')
+            password = request.data.get('password')
+            user_type = request.data.get('user_type')
 
-        if user_type == 'customer':
-            user_data.update({
-                'first_name': request.data.get('first_name'),
-                'last_name': request.data.get('last_name'),
-                'phone': request.data.get('phone')
-            })
-        
-        user = User.objects.create_user(**user_data)
+            # Validate required fields
+            if not all([username, email, password, user_type]):
+                return Response({
+                    'error': 'Missing required fields',
+                    'required': ['username', 'email', 'password', 'user_type']
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        if user_type == 'outlet':
-            Outlet.objects.create(
-                user=user,
-                name=request.data.get('name'),
-                address=request.data.get('address'),
-                business_type=request.data.get('business_type'),
-                tax_id=request.data.get('tax_id')
+            # Validate user type
+            if user_type not in ['customer', 'outlet']:
+                return Response({
+                    'error': 'Invalid user type. Must be either "customer" or "outlet"'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if username exists
+            if User.objects.filter(username=username).exists():
+                return Response({
+                    'error': 'Username already exists'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if email exists
+            if User.objects.filter(email=email).exists():
+                return Response({
+                    'error': 'Email already exists'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create user object
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                user_type=user_type
             )
 
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'message': 'Registration successful',
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'user_type': user.user_type
-        })
+            if user_type == 'customer':
+                # Update customer fields
+                user.first_name = request.data.get('first_name', '')
+                user.last_name = request.data.get('last_name', '')
+                user.phone_number = request.data.get('phone_number', '')
+                user.save()
+            
+            elif user_type == 'outlet':
+                # Validate required outlet fields
+                outlet_fields = ['name', 'address', 'business_type', 'tax_id']
+                if not all(request.data.get(field) for field in outlet_fields):
+                    user.delete()  # Rollback user creation
+                    return Response({
+                        'error': 'Missing required outlet fields',
+                        'required': outlet_fields
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                # Validate business type
+                business_type = request.data.get('business_type')
+                valid_business_types = dict(Outlet.BUSINESS_TYPES).keys()
+                if business_type not in valid_business_types:
+                    user.delete()  # Rollback user creation
+                    return Response({
+                        'error': 'Invalid business type',
+                        'valid_types': list(valid_business_types)
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                # Create outlet
+                Outlet.objects.create(
+                    user=user,
+                    name=request.data.get('name'),
+                    address=request.data.get('address'),
+                    business_type=request.data.get('business_type'),
+                    tax_id=request.data.get('tax_id')
+                )
+
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'message': 'Registration successful',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'user_type': user.user_type
+                },
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token)
+                }
+            }, status=status.HTTP_201_CREATED)
+
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'error': 'Registration failed',
+            'detail': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -181,15 +245,13 @@ class CardViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
     def issue(self, request):
-        customer_id = request.data.get('customer_id')
         initial_balance = Decimal(request.data.get('initial_balance', 0))
+        secure_key = str(uuid.uuid4().hex)[:16]
+        card_id = str(uuid.uuid4().hex)[:8].upper()  # Generate a random 8-character card ID
         
         try:
-            customer = User.objects.get(id=customer_id, user_type='customer')
-            secure_key = str(uuid.uuid4().hex)[:16]
-            
             card = Card.objects.create(
-                user=customer,
+                card_id=card_id,
                 secure_key=secure_key,
                 balance=initial_balance,
                 active=True
@@ -200,8 +262,8 @@ class CardViewSet(viewsets.ModelViewSet):
                 'card_id': card.id,
                 'secure_key': secure_key
             })
-        except User.DoesNotExist:
-            return Response({'error': 'Invalid customer'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()

@@ -27,12 +27,10 @@ urlpatterns = [
     path('password-reset/', views.password_reset, name='password-reset'),
 
     # Role-specific transaction routes
-    path('transactions/customer/', views.customer_transactions, name='customer-transactions'),
     path('transactions/outlet/', views.outlet_transactions, name='outlet-transactions'),
     path('transactions/', views.transactions, name='transactions'),
 
     # Dashboard routes
-    path('dashboard/customer/', views.customer_dashboard, name='customer-dashboard'),
     path('dashboard/outlet/', views.outlet_dashboard, name='outlet-dashboard'),
     path('dashboard/admin/', views.admin_dashboard, name='admin-dashboard'),
     

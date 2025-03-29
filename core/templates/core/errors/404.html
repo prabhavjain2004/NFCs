@@ -17,20 +17,7 @@
                     </a>
                 </div>
                 {% if user.is_authenticated %}
-                    {% if user.user_type == 'customer' %}
-                        <div>
-                            <a href="{% url 'customer-dashboard' %}" 
-                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
-                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-                            </a>
-                        </div>
-                        <div>
-                            <a href="{% url 'transactions' %}" 
-                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
-                                <i class="fas fa-exchange-alt mr-2"></i>Transactions
-                            </a>
-                        </div>
-                    {% elif user.user_type == 'outlet' %}
+                    {% if user.user_type == 'outlet' %}
                         <div>
                             <a href="{% url 'outlet-dashboard' %}" 
                                class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
