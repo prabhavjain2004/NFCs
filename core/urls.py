@@ -1,4 +1,5 @@
 from django.urls import path, include
+from django.contrib.auth import views as auth_views  # Import auth views
 from rest_framework.routers import DefaultRouter
 from . import views
 
@@ -42,6 +43,24 @@ urlpatterns = [
 
     # Error handlers
     path('400/', views.bad_request, name='400'),
+
+    # Add the logout URL pattern
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+
+    # Add the login URL pattern
+    path('login/', auth_views.LoginView.as_view(template_name='core/login.html'), name='login'),
+
+    # Add the about URL pattern
+    path('about/', views.about, name='about'),
+
+    # Add the contact URL pattern
+    path('contact/', views.contact, name='contact'),
+
+    # Add the FAQ URL pattern
+    path('faq/', views.faq, name='faq'),
+
+    # Add the Help Center URL pattern
+    path('help/', views.help, name='help'),
 ]
 
 # Custom error handlers

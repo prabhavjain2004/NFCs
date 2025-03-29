@@ -4,70 +4,67 @@
 {% block title %}Home - NFC Payment System{% endblock %}
 
 {% block content %}
-<div class="bg-white">
-    <!-- Hero Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+    <div class="text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            Welcome to NFC Payment System
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            Experience seamless, contactless payments with our state-of-the-art NFC technology.
+            Fast, secure, and convenient.
+        </p>
+        <div class="space-x-4">
+            <a href="{% url 'login' %}" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                Login
+            </a>
+            <a href="#features" class="inline-block px-8 py-3 bg-white text-blue-600 font-medium rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
+                Learn More
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div id="features" class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                Welcome to NFC Payment System
-            </h1>
-            <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                Experience seamless, contactless payments with our state-of-the-art NFC technology.
-                Fast, secure, and convenient.
-            </p>
-            <div class="space-x-4">
-                <a href="{% url 'login' %}" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                    Login
-                </a>
-                <a href="#features" class="inline-block px-8 py-3 bg-white text-blue-600 font-medium rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
-                    Learn More
-                </a>
+            <h2 class="text-3xl font-bold text-gray-900 mb-12">Key Features</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-blue-600 mb-4">
+                    <i class="fas fa-bolt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Fast Transactions</h3>
+                <p class="text-gray-600">Complete payments in seconds with just a tap of your NFC card.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-blue-600 mb-4">
+                    <i class="fas fa-shield-alt text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Secure Payments</h3>
+                <p class="text-gray-600">Advanced encryption and security measures to protect your transactions.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="text-blue-600 mb-4">
+                    <i class="fas fa-chart-line text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
+                <p class="text-gray-600">Track your transactions and monitor business performance in real-time.</p>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Features Section -->
-    <div id="features" class="py-16 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-12">Key Features</h2>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="text-blue-600 mb-4">
-                        <i class="fas fa-bolt text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Fast Transactions</h3>
-                    <p class="text-gray-600">Complete payments in seconds with just a tap of your NFC card.</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="text-blue-600 mb-4">
-                        <i class="fas fa-shield-alt text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Secure Payments</h3>
-                    <p class="text-gray-600">Advanced encryption and security measures to protect your transactions.</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="text-blue-600 mb-4">
-                        <i class="fas fa-chart-line text-3xl"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold mb-2">Real-time Analytics</h3>
-                    <p class="text-gray-600">Track your transactions and monitor business performance in real-time.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Contact Section -->
-    <div class="py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Get Started Today</h2>
-                <p class="text-xl text-gray-600 mb-8">Contact our team to learn more about implementing NFC payments in your business.</p>
-                <a href="mailto:support@nfcpayment.com" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                    Contact Us
-                </a>
-            </div>
+<!-- Contact Section -->
+<div class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Get Started Today</h2>
+            <p class="text-xl text-gray-600 mb-8">Contact our team to learn more about implementing NFC payments in your business.</p>
+            <a href="mailto:support@nfcpayment.com" class="inline-block px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                Contact Us
+            </a>
         </div>
     </div>
 </div>

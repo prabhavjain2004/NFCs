@@ -35,6 +35,7 @@ from .api_views import (
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 
 # Export all views
 __all__ = [
@@ -72,3 +73,23 @@ __all__ = [
 
 def home(request):
     return render(request, 'core/home.html')
+
+def admin_users(request):
+    users = get_user_model().objects.all()
+    return render(request, 'core/admin_users.html', {'users': users})
+
+def admin_settlements(request):
+    # Add your logic here
+    return render(request, 'core/admin_settlements.html')
+
+def about(request):
+    return render(request, 'core/about.html')
+
+def contact(request):
+    return render(request, 'core/contact.html')
+
+def faq(request):
+    return render(request, 'core/faq.html')
+
+def help(request):
+    return render(request, 'core/help.html')

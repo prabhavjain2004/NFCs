@@ -14,80 +14,85 @@
     <!-- Axios for API calls -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
+    <!-- Load static files -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Logo and Brand -->
-                <div class="flex items-center">
-                    <a href="{% url 'home' %}" class="flex items-center">
-                        <i class="fas fa-credit-card text-blue-600 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-900">NFC Pay</span>
-                    </a>
-                </div>
+    <header>
+        <!-- Navigation -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <!-- Logo and Brand -->
+                    <div class="flex items-center">
+                        <a href="{% url 'home' %}" class="flex items-center">
+                            <i class="fas fa-credit-card text-blue-600 text-2xl mr-2"></i>
+                            <span class="text-xl font-bold text-gray-900">NFC Pay</span>
+                        </a>
+                    </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Navigation Links -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        {% if user.is_authenticated %}
+                            {% if user.is_superuser %}
+                                <a href="{% url 'admin-dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                                <a href="{% url 'admin:core_user_changelist' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Users</a>
+                                <a href="{% url 'admin:core_settlement_changelist' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
+                            {% elif user.is_outlet %}
+                                <a href="{% url 'outlet_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                                <a href="{% url 'outlet_settlements' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
+                            {% endif %}
+                            
+                            <!-- User Menu -->
+                            <div class="relative ml-3" x-data="{ open: false }">
+                                <button @click="open = !open" class="flex items-center text-gray-700 hover:text-blue-600">
+                                    <span class="text-sm font-medium mr-2">{{ user.username }}</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                                    <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <div class="md:hidden flex items-center">
+                        <button class="text-gray-700 hover:text-blue-600" x-data="{ open: false }" @click="open = !open">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="md:hidden" x-show="open" @click.away="open = false">
+                <div class="px-2 pt-2 pb-3 space-y-1">
                     {% if user.is_authenticated %}
                         {% if user.is_superuser %}
-                            <a href="{% url 'admin-dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                            <a href="{% url 'admin_users' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Users</a>
-                            <a href="{% url 'admin_settlements' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
+                            <a href="{% url 'admin-dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
+                            <a href="{% url 'admin:core_user_changelist' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Users</a>
+                            <a href="{% url 'admin:core_settlement_changelist' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
                         {% elif user.is_outlet %}
-                            <a href="{% url 'outlet_dashboard' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                            <a href="{% url 'outlet_settlements' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
+                            <a href="{% url 'outlet_dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
+                            <a href="{% url 'outlet_settlements' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
                         {% endif %}
-                        
-                        <!-- User Menu -->
-                        <div class="relative ml-3" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center text-gray-700 hover:text-blue-600">
-                                <span class="text-sm font-medium mr-2">{{ user.username }}</span>
-                                <i class="fas fa-chevron-down text-xs"></i>
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1">
-                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
-                            </div>
-                        </div>
+                        <a href="{% url 'profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Profile</a>
+                        <a href="{% url 'logout' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Logout</a>
                     {% else %}
-                        <a href="{% url 'login' %}" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{% url 'login' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Login</a>
                     {% endif %}
                 </div>
-
-                <!-- Mobile Menu Button -->
-                <div class="md:hidden flex items-center">
-                    <button class="text-gray-700 hover:text-blue-600" x-data="{ open: false }" @click="open = !open">
-                        <i class="fas fa-bars text-xl"></i>
-                    </button>
-                </div>
             </div>
-        </div>
+        </nav>
+    </header>
 
-        <!-- Mobile Menu -->
-        <div class="md:hidden" x-show="open" @click.away="open = false">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                {% if user.is_authenticated %}
-                    {% if user.is_superuser %}
-                        <a href="{% url 'admin-dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
-                        <a href="{% url 'admin_users' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Users</a>
-                        <a href="{% url 'admin_settlements' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
-                    {% elif user.is_outlet %}
-                        <a href="{% url 'outlet_dashboard' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Dashboard</a>
-                        <a href="{% url 'outlet_settlements' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Settlements</a>
-                    {% endif %}
-                    <a href="{% url 'profile' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Profile</a>
-                    <a href="{% url 'logout' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Logout</a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Login</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
     <main>
         {% if messages %}
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
@@ -139,9 +144,8 @@
                     <div>
                         <h3 class="text-sm font-semibold text-gray-900 uppercase">Support</h3>
                         <ul class="mt-4 space-y-4">
-                            <li>
-                                <a href="{% url 'faq' %}" class="text-gray-600 hover:text-blue-600">FAQ</a>
-                            </li>
+                            <!-- Remove the FAQ link -->
+                            <!-- <a href="{% url 'faq' %}" class="text-gray-600 hover:text-blue-600">FAQ</a> -->
                             <li>
                                 <a href="{% url 'help' %}" class="text-gray-600 hover:text-blue-600">Help Center</a>
                             </li>
