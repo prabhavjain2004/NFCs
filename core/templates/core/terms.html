@@ -1,159 +1,132 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block title %}Terms of Service - NFC Payment System{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="card">
-        <div class="card-body">
-            <h1 class="mb-4">Terms of Service</h1>
-            <p class="text-muted">Last updated: {% now "F d, Y" %}</p>
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-900">Terms of Service</h1>
+                <p class="mt-2 text-gray-600">Last updated: January 1, 2024</p>
+            </div>
+            
+            <div class="p-6 space-y-8">
+                <!-- Introduction -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Introduction</h2>
+                    <p class="text-gray-700">
+                        These Terms of Service ("Terms") govern your use of the NFC Payment System ("Service"). By using our Service, you agree to these Terms. Please read them carefully.
+                    </p>
+                </section>
 
-            <section class="mb-4">
-                <h2>1. Acceptance of Terms</h2>
-                <p>By accessing and using the NFC Payment System, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to these terms, please do not use our service.</p>
-            </section>
-
-            <section class="mb-4">
-                <h2>2. Service Description</h2>
-                <p>The NFC Payment System provides:</p>
-                <ul>
-                    <li>Secure contactless payment processing using NFC technology</li>
-                    <li>Digital wallet management</li>
-                    <li>Transaction tracking and history</li>
-                    <li>User account management</li>
-                    <li>Merchant settlement services</li>
-                </ul>
-            </section>
-
-            <section class="mb-4">
-                <h2>3. User Accounts</h2>
-                <div class="card-text">
-                    <h5>3.1 Account Creation</h5>
-                    <p>To use our service, you must:</p>
-                    <ul>
-                        <li>Be at least 18 years old</li>
-                        <li>Complete the registration process</li>
-                        <li>Provide accurate and complete information</li>
-                        <li>Maintain the security of your account credentials</li>
+                <!-- Definitions -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Definitions</h2>
+                    <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                        <li><span class="font-medium">User:</span> Any person who uses our Service</li>
+                        <li><span class="font-medium">Customer:</span> A user who makes payments using NFC cards</li>
+                        <li><span class="font-medium">Outlet:</span> A business that accepts NFC payments</li>
+                        <li><span class="font-medium">NFC Card:</span> The contactless payment card issued by our system</li>
+                        <li><span class="font-medium">Transaction:</span> Any payment made through our Service</li>
                     </ul>
+                </section>
 
-                    <h5>3.2 Account Types</h5>
-                    <p>We offer different account types:</p>
-                    <ul>
-                        <li><strong>Customer Accounts:</strong> For individuals using the payment service</li>
-                        <li><strong>Merchant Accounts:</strong> For businesses accepting payments</li>
-                        <li><strong>Administrative Accounts:</strong> For system management</li>
-                    </ul>
-                </div>
-            </section>
+                <!-- Account Terms -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Account Terms</h2>
+                    <div class="space-y-4">
+                        <p class="text-gray-700">To use our Service, you must:</p>
+                        <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                            <li>Be at least 18 years old</li>
+                            <li>Complete the registration process accurately</li>
+                            <li>Maintain the security of your account</li>
+                            <li>Accept responsibility for all activities under your account</li>
+                            <li>Provide accurate and up-to-date information</li>
+                        </ul>
+                    </div>
+                </section>
 
-            <section class="mb-4">
-                <h2>4. Payment Terms</h2>
-                <div class="card-text">
-                    <h5>4.1 Transaction Processing</h5>
-                    <ul>
-                        <li>All payments are processed in real-time</li>
-                        <li>Transaction fees may apply</li>
-                        <li>Refunds must be processed within 30 days</li>
-                    </ul>
+                <!-- Payment Terms -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Payment Terms</h2>
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-medium text-gray-900">Transaction Fees</h3>
+                        <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                            <li>Standard transaction fee: 2.5%</li>
+                            <li>International transaction fee: 3.5%</li>
+                            <li>Refund processing fee: 1%</li>
+                        </ul>
 
-                    <h5>4.2 Merchant Settlements</h5>
-                    <ul>
-                        <li>Settlements are processed within 2-3 business days</li>
-                        <li>Settlement fees may apply</li>
-                        <li>Minimum settlement amount requirements may exist</li>
-                    </ul>
-                </div>
-            </section>
+                        <h3 class="text-xl font-medium text-gray-900">Settlement Terms</h3>
+                        <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                            <li>Standard settlement period: 2-3 business days</li>
+                            <li>Minimum settlement amount: $50</li>
+                            <li>Maximum daily transaction limit: $5,000</li>
+                        </ul>
+                    </div>
+                </section>
 
-            <section class="mb-4">
-                <h2>5. Security</h2>
-                <div class="card-text">
-                    <h5>5.1 User Responsibilities</h5>
-                    <ul>
+                <!-- User Responsibilities -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">User Responsibilities</h2>
+                    <ul class="list-disc pl-6 text-gray-700 space-y-2">
                         <li>Maintain confidentiality of account credentials</li>
-                        <li>Report unauthorized access immediately</li>
-                        <li>Ensure secure handling of NFC cards</li>
+                        <li>Report unauthorized transactions immediately</li>
+                        <li>Keep NFC cards secure</li>
+                        <li>Comply with all applicable laws and regulations</li>
+                        <li>Use the Service only for legitimate purposes</li>
                     </ul>
+                </section>
 
-                    <h5>5.2 System Security</h5>
-                    <ul>
-                        <li>End-to-end encryption of transactions</li>
-                        <li>Two-factor authentication for sensitive operations</li>
-                        <li>Regular security audits and updates</li>
+                <!-- Prohibited Activities -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Prohibited Activities</h2>
+                    <ul class="list-disc pl-6 text-gray-700 space-y-2">
+                        <li>Fraudulent transactions</li>
+                        <li>Unauthorized access attempts</li>
+                        <li>Sharing account credentials</li>
+                        <li>Using the Service for illegal activities</li>
+                        <li>Tampering with NFC cards</li>
                     </ul>
-                </div>
-            </section>
+                </section>
 
-            <section class="mb-4">
-                <h2>6. Prohibited Activities</h2>
-                <p>Users must not:</p>
-                <ul>
-                    <li>Attempt to bypass security measures</li>
-                    <li>Use the service for illegal activities</li>
-                    <li>Share account credentials</li>
-                    <li>Submit false or misleading information</li>
-                    <li>Interfere with service operations</li>
-                </ul>
-            </section>
-
-            <section class="mb-4">
-                <h2>7. Liability</h2>
-                <div class="card-text">
-                    <h5>7.1 Limitation of Liability</h5>
-                    <p>We are not liable for:</p>
-                    <ul>
-                        <li>Unauthorized transactions due to user negligence</li>
-                        <li>Service interruptions or technical issues</li>
-                        <li>Loss of data or financial losses</li>
-                        <li>Third-party services or products</li>
+                <!-- Termination -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Termination</h2>
+                    <p class="text-gray-700">
+                        We reserve the right to suspend or terminate your account for any violation of these Terms. Upon termination:
+                    </p>
+                    <ul class="list-disc pl-6 text-gray-700 mt-4 space-y-2">
+                        <li>All access rights will be revoked</li>
+                        <li>Pending transactions may be cancelled</li>
+                        <li>Account balance must be settled</li>
+                        <li>NFC cards must be returned or destroyed</li>
                     </ul>
+                </section>
 
-                    <h5>7.2 User Liability</h5>
-                    <p>Users are responsible for:</p>
-                    <ul>
-                        <li>Maintaining account security</li>
-                        <li>Accuracy of provided information</li>
-                        <li>Compliance with these terms</li>
-                    </ul>
-                </div>
-            </section>
+                <!-- Changes to Terms -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Changes to Terms</h2>
+                    <p class="text-gray-700">
+                        We may modify these Terms at any time. We will notify users of any material changes via email or through the Service. Your continued use of the Service after such modifications constitutes acceptance of the updated Terms.
+                    </p>
+                </section>
 
-            <section class="mb-4">
-                <h2>8. Termination</h2>
-                <p>We reserve the right to:</p>
-                <ul>
-                    <li>Suspend or terminate accounts for violations</li>
-                    <li>Modify or discontinue services</li>
-                    <li>Update these terms at any time</li>
-                </ul>
-            </section>
-
-            <section class="mb-4">
-                <h2>9. Dispute Resolution</h2>
-                <p>Any disputes will be resolved through:</p>
-                <ul>
-                    <li>Direct negotiation</li>
-                    <li>Mediation</li>
-                    <li>Arbitration as a last resort</li>
-                </ul>
-            </section>
-
-            <section class="mb-4">
-                <h2>10. Contact Information</h2>
-                <p>For questions about these terms, contact us:</p>
-                <ul>
-                    <li>Email: legal@nfcpaymentsystem.com</li>
-                    <li>Phone: +1 (555) 123-4567</li>
-                    <li>Address: 123 Payment Street, Tech City, TC 12345</li>
-                </ul>
-            </section>
-
-            <div class="alert alert-warning">
-                <h4 class="alert-heading">Important Notice</h4>
-                <p class="mb-0">By using our service, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. We reserve the right to modify these terms at any time, and your continued use of the service constitutes acceptance of any modifications.</p>
+                <!-- Contact Information -->
+                <section>
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">Contact Information</h2>
+                    <p class="text-gray-700">
+                        For questions about these Terms, please contact us at:
+                    </p>
+                    <div class="mt-4 bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700">
+                            Email: legal@nfcpay.com<br>
+                            Phone: +1 (555) 123-4567<br>
+                            Address: 123 Payment Street, Tech City, TC 12345
+                        </p>
+                    </div>
+                </section>
             </div>
         </div>
     </div>

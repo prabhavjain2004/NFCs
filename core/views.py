@@ -16,7 +16,12 @@ from .page_views import (
     customer_dashboard,
     outlet_dashboard,
     admin_dashboard,
-    card_management
+    card_management,
+    customer_transactions,
+    outlet_transactions,
+    admin_users,
+    admin_settlements,
+    outlet_settlements
 )
 
 from .api_views import (
@@ -51,6 +56,11 @@ __all__ = [
     'outlet_dashboard',
     'admin_dashboard',
     'card_management',
+    'customer_transactions',
+    'outlet_transactions',
+    'admin_users',
+    'admin_settlements',
+    'outlet_settlements',
     
     # API Views
     'register_user',

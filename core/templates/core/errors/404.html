@@ -4,99 +4,84 @@
 
 {% block content %}
 {{ block.super }}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Looking for something?</h5>
-                    <p class="card-text">Here are some helpful links:</p>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{% url 'home' %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-home me-2"></i>Home Page
-                                </a>
-                            </div>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <h5 class="text-xl font-semibold text-gray-900 mb-4">Looking for something?</h5>
+            <p class="text-gray-700 mb-6">Here are some helpful links:</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <a href="{% url 'home' %}" 
+                       class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                        <i class="fas fa-home mr-2"></i>Home Page
+                    </a>
+                </div>
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'customer' %}
+                        <div>
+                            <a href="{% url 'customer-dashboard' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
                         </div>
-                        {% if user.is_authenticated %}
-                            {% if user.user_type == 'customer' %}
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'customer-dashboard' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'transactions' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-exchange-alt me-2"></i>Transactions
-                                        </a>
-                                    </div>
-                                </div>
-                            {% elif user.user_type == 'outlet' %}
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'outlet-dashboard' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-store me-2"></i>Outlet Dashboard
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'transactions' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-cash-register me-2"></i>Payment History
-                                        </a>
-                                    </div>
-                                </div>
-                            {% elif user.user_type == 'admin' %}
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'admin-dashboard' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-user-shield me-2"></i>Admin Dashboard
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-grid">
-                                        <a href="{% url 'card-management' %}" class="btn btn-outline-primary">
-                                            <i class="fas fa-credit-card me-2"></i>Card Management
-                                        </a>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% else %}
-                            <div class="col-md-6">
-                                <div class="d-grid">
-                                    <a href="#" id="loginBtn" class="btn btn-outline-primary">
-                                        <i class="fas fa-sign-in-alt me-2"></i>Login
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="d-grid">
-                                    <a href="{% url 'register' %}" class="btn btn-outline-primary">
-                                        <i class="fas fa-user-plus me-2"></i>Register
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{% url 'privacy' %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-shield-alt me-2"></i>Privacy Policy
-                                </a>
-                            </div>
+                        <div>
+                            <a href="{% url 'transactions' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-exchange-alt mr-2"></i>Transactions
+                            </a>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-grid">
-                                <a href="{% url 'terms' %}" class="btn btn-outline-primary">
-                                    <i class="fas fa-file-contract me-2"></i>Terms of Service
-                                </a>
-                            </div>
+                    {% elif user.user_type == 'outlet' %}
+                        <div>
+                            <a href="{% url 'outlet-dashboard' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-store mr-2"></i>Outlet Dashboard
+                            </a>
                         </div>
+                        <div>
+                            <a href="{% url 'transactions' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-cash-register mr-2"></i>Payment History
+                            </a>
+                        </div>
+                    {% elif user.user_type == 'admin' %}
+                        <div>
+                            <a href="{% url 'admin-dashboard' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-user-shield mr-2"></i>Admin Dashboard
+                            </a>
+                        </div>
+                        <div>
+                            <a href="{% url 'card-management' %}" 
+                               class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                                <i class="fas fa-credit-card mr-2"></i>Card Management
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div>
+                        <a href="#" id="loginBtn" 
+                           class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </a>
                     </div>
+                    <div>
+                        <a href="{% url 'register' %}" 
+                           class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                            <i class="fas fa-user-plus mr-2"></i>Register
+                        </a>
+                    </div>
+                {% endif %}
+                <div>
+                    <a href="{% url 'privacy' %}" 
+                       class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                        <i class="fas fa-shield-alt mr-2"></i>Privacy Policy
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'terms' %}" 
+                       class="flex items-center justify-center px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 w-full">
+                        <i class="fas fa-file-contract mr-2"></i>Terms of Service
+                    </a>
                 </div>
             </div>
         </div>

@@ -29,6 +29,31 @@ def transactions(request):
         return redirect('home')
     return render(request, 'core/transactions.html')
 
+def customer_transactions(request):
+    if not request.user.is_authenticated or request.user.user_type != 'customer':
+        return redirect('home')
+    return render(request, 'core/transactions.html', {'user_type': 'customer'})
+
+def outlet_transactions(request):
+    if not request.user.is_authenticated or request.user.user_type != 'outlet':
+        return redirect('home')
+    return render(request, 'core/transactions.html', {'user_type': 'outlet'})
+
+def admin_users(request):
+    if not request.user.is_authenticated or request.user.user_type != 'admin':
+        return redirect('home')
+    return render(request, 'core/admin/users.html')
+
+def admin_settlements(request):
+    if not request.user.is_authenticated or request.user.user_type != 'admin':
+        return redirect('home')
+    return render(request, 'core/admin/settlements.html')
+
+def outlet_settlements(request):
+    if not request.user.is_authenticated or request.user.user_type != 'outlet':
+        return redirect('home')
+    return render(request, 'core/outlet/settlements.html')
+
 def customer_dashboard(request):
     if not request.user.is_authenticated or request.user.user_type != 'customer':
         return redirect('home')

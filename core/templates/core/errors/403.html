@@ -4,25 +4,34 @@
 
 {% block content %}
 {{ block.super }}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Possible Reasons:</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-lock text-danger me-2"></i>Insufficient permissions</li>
-                        <li><i class="fas fa-user-shield text-danger me-2"></i>Authentication required</li>
-                        <li><i class="fas fa-ban text-danger me-2"></i>Access restricted</li>
-                    </ul>
-                    {% if not user.is_authenticated %}
-                        <div class="alert alert-info mt-3">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Please <a href="#" id="loginBtn" class="alert-link">login</a> to access this resource.
-                        </div>
-                    {% endif %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <h5 class="text-xl font-semibold text-gray-900 mb-4">Possible Reasons:</h5>
+            <ul class="space-y-4">
+                <li class="flex items-center">
+                    <i class="fas fa-lock text-red-600 mr-3 w-5"></i>
+                    <span class="text-gray-700">Insufficient permissions</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-user-shield text-red-600 mr-3 w-5"></i>
+                    <span class="text-gray-700">Authentication required</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-ban text-red-600 mr-3 w-5"></i>
+                    <span class="text-gray-700">Access restricted</span>
+                </li>
+            </ul>
+            {% if not user.is_authenticated %}
+                <div class="mt-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+                    <div class="flex">
+                        <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+                        <p class="text-blue-700">
+                            Please <a href="#" id="loginBtn" class="font-medium underline hover:text-blue-800">login</a> to access this resource.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 </div>

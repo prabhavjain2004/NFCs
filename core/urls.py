@@ -24,14 +24,25 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('privacy/', views.privacy, name='privacy'),
     path('terms/', views.terms, name='terms'),
-    path('password-reset/', views.password_reset, name='password-reset'),  # Changed from password-reset-page
+    path('password-reset/', views.password_reset, name='password-reset'),
+
+    # Role-specific transaction routes
+    path('transactions/customer/', views.customer_transactions, name='customer-transactions'),
+    path('transactions/outlet/', views.outlet_transactions, name='outlet-transactions'),
     path('transactions/', views.transactions, name='transactions'),
 
     # Dashboard routes
     path('dashboard/customer/', views.customer_dashboard, name='customer-dashboard'),
     path('dashboard/outlet/', views.outlet_dashboard, name='outlet-dashboard'),
     path('dashboard/admin/', views.admin_dashboard, name='admin-dashboard'),
+    
+    # Admin routes
+    path('admin/users/', views.admin_users, name='admin-users'),
+    path('admin/settlements/', views.admin_settlements, name='admin-settlements'),
     path('card-management/', views.card_management, name='card-management'),
+    
+    # Outlet routes
+    path('outlet/settlements/', views.outlet_settlements, name='outlet-settlements'),
 
     # Error handlers
     path('400/', views.bad_request, name='400'),

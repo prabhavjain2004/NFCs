@@ -289,3 +289,199 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make instance available globally
     window.cardOperations = cardOperations;
 });
+
+// Card Operations Management
+
+// Card Listing
+async function loadUserCards() {
+    try {
+        const response = await fetch('/api/cards/', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load cards');
+        
+        const cards = await response.json();
+        displayCards(cards);
+    } catch (error) {
+        showErrorMessage('Failed to load cards: ' + error.message);
+    }
+}
+
+function displayCards(cards) {
+    const cardContainer = document.getElementById('cardList');
+    if (!cardContainer) return;
+
+    cardContainer.innerHTML = '';
+    
+    cards.forEach(card => {
+        const cardElement = createCardElement(card);
+        cardContainer.appendChild(cardElement);
+    });
+}
+
+function createCardElement(card) {
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card-item';
+    cardDiv.innerHTML = `
+        <div class="card-header">
+            <h3>Card ID: ${card.card_id}</h3>
+            <span class="status ${card.is_active ? 'active' : 'inactive'}">
+                ${card.is_active ? 'Active' : 'Inactive'}
+            </span>
+        </div>
+        <div class="card-body">
+            <p>Balance: ₹${card.balance.toFixed(2)}</p>
+            <p>Daily Limit: ₹${card.daily_limit.toFixed(2)}</p>
+            <p>Transaction Limit: ₹${card.transaction_limit.toFixed(2)}</p>
+            <p>Expiry: ${new Date(card.expiry_date).toLocaleDateString()}</p>
+        </div>
+        <div class="card-actions">
+            ${card.is_active ? 
+                `<button onclick="deactivateCard('${card.card_id}')" class="btn-danger">Deactivate</button>` :
+                `<button onclick="activateCard('${card.card_id}')" class="btn-success">Activate</button>`
+            }
+            <button onclick="showUpdateLimitsModal('${card.card_id}')" class="btn-primary">Update Limits</button>
+        </div>
+    `;
+    return cardDiv;
+}
+
+// Card Activation/Deactivation
+async function activateCard(cardId) {
+    await updateCardStatus(cardId, true);
+}
+
+async function deactivateCard(cardId) {
+    if (!confirm('Are you sure you want to deactivate this card?')) return;
+    await updateCardStatus(cardId, false);
+}
+
+async function updateCardStatus(cardId, isActive) {
+    try {
+        const response = await fetch(`/api/cards/${cardId}/status/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({ is_active: isActive })
+        });
+
+        if (!response.ok) throw new Error('Failed to update card status');
+        
+        showSuccessMessage(`Card successfully ${isActive ? 'activated' : 'deactivated'}`);
+        await loadUserCards(); // Refresh card list
+    } catch (error) {
+        showErrorMessage('Failed to update card status: ' + error.message);
+    }
+}
+
+// Card Limits Management
+function showUpdateLimitsModal(cardId) {
+    const modal = document.getElementById('updateLimitsModal');
+    modal.style.display = 'block';
+    modal.dataset.cardId = cardId;
+}
+
+async function updateCardLimits(event) {
+    event.preventDefault();
+    const modal = document.getElementById('updateLimitsModal');
+    const cardId = modal.dataset.cardId;
+    
+    const dailyLimit = document.getElementById('dailyLimit').value;
+    const transactionLimit = document.getElementById('transactionLimit').value;
+
+    try {
+        const response = await fetch(`/api/cards/${cardId}/limits/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                daily_limit: parseFloat(dailyLimit),
+                transaction_limit: parseFloat(transactionLimit)
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to update card limits');
+        
+        showSuccessMessage('Card limits updated successfully');
+        modal.style.display = 'none';
+        await loadUserCards(); // Refresh card list
+    } catch (error) {
+        showErrorMessage('Failed to update card limits: ' + error.message);
+    }
+}
+
+// Card Issue Request (Admin Only)
+async function requestNewCard(userId) {
+    try {
+        const response = await fetch('/api/cards/issue/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                daily_limit: 1000, // Default daily limit
+                transaction_limit: 500 // Default transaction limit
+            })
+        });
+
+        if (!response.ok) throw new Error('Failed to issue new card');
+        
+        const result = await response.json();
+        showSuccessMessage('New card issued successfully');
+        return result.card_id;
+    } catch (error) {
+        showErrorMessage('Failed to issue new card: ' + error.message);
+        throw error;
+    }
+}
+
+// Utility Functions
+function showSuccessMessage(message) {
+    const messageDiv = document.getElementById('messageContainer');
+    if (!messageDiv) return;
+    
+    messageDiv.innerHTML = `<div class="alert alert-success">${message}</div>`;
+    setTimeout(() => messageDiv.innerHTML = '', 3000);
+}
+
+function showErrorMessage(message) {
+    const messageDiv = document.getElementById('messageContainer');
+    if (!messageDiv) return;
+    
+    messageDiv.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+    setTimeout(() => messageDiv.innerHTML = '', 5000);
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserCards();
+    
+    // Setup modal close buttons
+    document.querySelectorAll('.modal .close').forEach(button => {
+        button.onclick = () => {
+            button.closest('.modal').style.display = 'none';
+        };
+    });
+
+    // Close modal when clicking outside
+    window.onclick = event => {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    };
+
+    // Setup limits form submission
+    const limitsForm = document.getElementById('updateLimitsForm');
+    if (limitsForm) {
+        limitsForm.onsubmit = updateCardLimits;
+    }
+});

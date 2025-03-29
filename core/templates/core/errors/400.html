@@ -4,19 +4,24 @@
 
 {% block content %}
 {{ block.super }}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Common Causes:</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Invalid form submission</li>
-                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Malformed request data</li>
-                        <li><i class="fas fa-exclamation-circle text-warning me-2"></i>Invalid API parameters</li>
-                    </ul>
-                </div>
-            </div>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-6">
+            <h5 class="text-xl font-semibold text-gray-900 mb-4">Common Causes:</h5>
+            <ul class="space-y-4">
+                <li class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-yellow-500 mr-3 w-5"></i>
+                    <span class="text-gray-700">Invalid form submission</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-yellow-500 mr-3 w-5"></i>
+                    <span class="text-gray-700">Malformed request data</span>
+                </li>
+                <li class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-yellow-500 mr-3 w-5"></i>
+                    <span class="text-gray-700">Invalid API parameters</span>
+                </li>
+            </ul>
         </div>
     </div>
 </div>

@@ -1,451 +1,197 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Admin Dashboard - NFC Payment System{% endblock %}
+{% block title %}Admin Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container mx-auto px-4 py-8">
     <!-- System Overview -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total Users</h5>
-                    <h2 id="totalUsers">0</h2>
-                    <div class="mt-2">
-                        <small>Customers: <span id="customerCount">0</span></small><br>
-                        <small>Outlets: <span id="outletCount">0</span></small>
-                    </div>
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">System Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700">Total Users</h3>
+                <div class="text-3xl font-bold text-blue-600 my-2">{{ total_users }}</div>
+                <div class="text-sm text-gray-600">
+                    <div>Customers: {{ customer_count }}</div>
+                    <div>Outlets: {{ outlet_count }}</div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Active Cards</h5>
-                    <h2 id="activeCards">0</h2>
-                    <small>Total Value: ₹<span id="totalCardValue">0.00</span></small>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700">Active Cards</h3>
+                <div class="text-3xl font-bold text-green-600 my-2">{{ active_cards }}</div>
+                <div class="text-sm text-gray-600">
+                    <div>Total Cards: {{ total_cards }}</div>
+                    <div>Blocked: {{ blocked_cards }}</div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Today's Transactions</h5>
-                    <h2 id="todayTransactions">0</h2>
-                    <small>Value: ₹<span id="todayValue">0.00</span></small>
-                </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700">Today's Transactions</h3>
+                <div class="text-3xl font-bold text-purple-600 my-2">{{ today_transactions_count }}</div>
+                <div class="text-xl text-gray-700">₹{{ today_transactions_amount }}</div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Pending Settlements</h5>
-                    <h2 id="pendingSettlements">0</h2>
-                    <small>Value: ₹<span id="settlementValue">0.00</span></small>
-                </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700">Pending Settlements</h3>
+                <div class="text-3xl font-bold text-red-600 my-2">{{ pending_settlements_count }}</div>
+                <div class="text-xl text-gray-700">₹{{ pending_settlements_amount }}</div>
             </div>
         </div>
     </div>
 
     <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Quick Actions</h5>
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'card-management' %}" class="bg-white rounded-lg shadow-lg p-6 hover:bg-gray-50 transition duration-200">
+                <div class="w-12 h-12 bg-blue-100 rounded-full mb-4 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
                 </div>
-                <div class="card-body">
-                    <button class="btn btn-primary me-2" id="issueCardBtn">Issue New Card</button>
-                    <button class="btn btn-success me-2" id="rechargeCardBtn">Recharge Card</button>
-                    <button class="btn btn-info me-2" id="processSettlementsBtn">Process Settlements</button>
-                    <button class="btn btn-warning" id="manageUsersBtn">Manage Users</button>
+                <h3 class="text-lg font-semibold text-gray-700">Issue New Card</h3>
+            </a>
+            <button onclick="showRechargeModal()" class="bg-white rounded-lg shadow-lg p-6 hover:bg-gray-50 transition duration-200">
+                <div class="w-12 h-12 bg-green-100 rounded-full mb-4 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
                 </div>
+                <h3 class="text-lg font-semibold text-gray-700">Recharge Wallet</h3>
+            </button>
+            <a href="{% url 'admin-settlements' %}" class="bg-white rounded-lg shadow-lg p-6 hover:bg-gray-50 transition duration-200">
+                <div class="w-12 h-12 bg-purple-100 rounded-full mb-4 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700">Process Settlements</h3>
+            </a>
+            <a href="{% url 'admin-users' %}" class="bg-white rounded-lg shadow-lg p-6 hover:bg-gray-50 transition duration-200">
+                <div class="w-12 h-12 bg-yellow-100 rounded-full mb-4 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-700">Manage Users</h3>
+            </a>
+        </div>
+    </div>
+
+    <!-- System Analytics -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">System Analytics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Transaction Volume</h3>
+                <canvas id="transactionVolumeChart" class="w-full"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Revenue Trend</h3>
+                <canvas id="revenueTrendChart" class="w-full"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">User Growth</h3>
+                <canvas id="userGrowthChart" class="w-full"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">Settlement Status</h3>
+                <canvas id="settlementStatusChart" class="w-full"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Main Content Tabs -->
-    <div class="card">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#cards">Cards</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#transactions">Transactions</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#settlements">Settlements</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#analytics">Analytics</a>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body">
-            <div class="tab-content">
-                <!-- Cards Tab -->
-                <div class="tab-pane fade show active" id="cards">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Card ID</th>
-                                    <th>User</th>
-                                    <th>Balance</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cardsList">
-                                <!-- Cards will be loaded dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- Recent Activity -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+        <div class="bg-white rounded-lg shadow-lg divide-y">
+            {% for log in recent_activity %}
+            <div class="p-4 flex items-center space-x-4">
+                <div class="text-sm text-gray-500">{{ log.timestamp|date:"H:i" }}</div>
+                <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-700">{{ log.get_action_display }}</h4>
+                    <p class="text-gray-600">{{ log.details }}</p>
                 </div>
-
-                <!-- Transactions Tab -->
-                <div class="tab-pane fade" id="transactions">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Type</th>
-                                    <th>Amount</th>
-                                    <th>Card ID</th>
-                                    <th>Outlet</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsList">
-                                <!-- Transactions will be loaded dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Settlements Tab -->
-                <div class="tab-pane fade" id="settlements">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Outlet</th>
-                                    <th>Amount</th>
-                                    <th>Transactions</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="settlementsList">
-                                <!-- Settlements will be loaded dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Analytics Tab -->
-                <div class="tab-pane fade" id="analytics">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <canvas id="transactionChart"></canvas>
-                        </div>
-                        <div class="col-md-6">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    </div>
+                <div class="text-sm text-gray-500">
+                    <div>{{ log.user.username }}</div>
+                    <div>{{ log.ip_address }}</div>
                 </div>
             </div>
+            {% empty %}
+            <p class="p-4 text-gray-500">No recent activity.</p>
+            {% endfor %}
         </div>
     </div>
-</div>
 
-<!-- Issue Card Modal -->
-<div class="modal fade" id="issueCardModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Issue New Card</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Security Alerts -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Security Alerts</h2>
+        <div class="bg-white rounded-lg shadow-lg divide-y">
+            {% for alert in security_alerts %}
+            <div class="p-4 flex items-center space-x-4">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-700">{{ alert.get_alert_type_display }}</h4>
+                    <p class="text-gray-600">{{ alert.description }}</p>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <span>{{ alert.timestamp|date:"d M Y H:i" }}</span>
+                        <span class="ml-2 px-2 py-1 rounded-full text-xs {% if alert.status == 'resolved' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ alert.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                <button onclick="handleAlert('{{ alert.id }}')" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200">
+                    Review
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="issueCardForm">
-                    <div class="mb-3">
-                        <label class="form-label">Select User</label>
-                        <select class="form-select" id="userSelect" required>
-                            <!-- Users will be loaded dynamically -->
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Initial Balance</label>
-                        <input type="number" class="form-control" id="initialBalance" min="0" step="0.01" required>
-                    </div>
-                    <div id="nfcScanStatus" class="alert alert-info d-none">
-                        Please scan the NFC card...
-                    </div>
-                    <button type="submit" class="btn btn-primary">Issue Card</button>
-                </form>
-            </div>
+            {% empty %}
+            <p class="p-4 text-gray-500">No security alerts.</p>
+            {% endfor %}
         </div>
     </div>
 </div>
 
-<!-- Recharge Card Modal -->
-<div class="modal fade" id="rechargeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Recharge Card</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Recharge Modal -->
+<div id="rechargeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Recharge Wallet</h2>
+        <form id="rechargeForm" onsubmit="handleRecharge(event)" class="space-y-4">
+            <div>
+                <label for="user" class="block text-sm font-medium text-gray-700 mb-1">Select User</label>
+                <select id="user" name="user" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}">{{ customer.username }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="modal-body">
-                <form id="rechargeForm">
-                    <div class="mb-3">
-                        <label class="form-label">Card ID</label>
-                        <input type="text" class="form-control" id="cardIdRecharge" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
-                        <input type="number" class="form-control" id="rechargeAmount" min="1" step="0.01" required>
-                    </div>
-                    <div id="rechargeScanStatus" class="alert alert-info d-none">
-                        Please scan the card to confirm recharge...
-                    </div>
-                    <button type="submit" class="btn btn-success">Recharge</button>
-                </form>
+            <div>
+                <label for="card" class="block text-sm font-medium text-gray-700 mb-1">Select Card</label>
+                <select id="card" name="card" required disabled class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Select user first</option>
+                </select>
             </div>
-        </div>
+            <div>
+                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                <input type="number" id="amount" name="amount" min="100" step="100" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button type="button" onclick="closeRechargeModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                    Recharge
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
 
-<!-- JavaScript for Admin Dashboard -->
+{% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Load dashboard data
-    function loadDashboardData() {
-        const token = localStorage.getItem('access_token');
-        axios.get('/api/admin-dashboard/summary/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => {
-            // Update system overview
-            document.getElementById('totalUsers').textContent = response.data.total_users;
-            document.getElementById('customerCount').textContent = response.data.customer_count;
-            document.getElementById('outletCount').textContent = response.data.outlet_count;
-            document.getElementById('activeCards').textContent = response.data.active_cards;
-            document.getElementById('totalCardValue').textContent = response.data.total_card_value;
-            document.getElementById('todayTransactions').textContent = response.data.today_transactions;
-            document.getElementById('todayValue').textContent = response.data.today_value;
-            document.getElementById('pendingSettlements').textContent = response.data.pending_settlements;
-            document.getElementById('settlementValue').textContent = response.data.settlement_value;
-        })
-        .catch(error => {
-            console.error('Error loading dashboard data:', error);
-        });
-    }
-
-    // Load cards list
-    function loadCards() {
-        const token = localStorage.getItem('access_token');
-        axios.get('/api/cards/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => {
-            const tbody = document.getElementById('cardsList');
-            tbody.innerHTML = '';
-            response.data.forEach(card => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${card.card_id}</td>
-                        <td>${card.user}</td>
-                        <td>₹${card.balance}</td>
-                        <td>
-                            <span class="badge bg-${card.active ? 'success' : 'danger'}">
-                                ${card.active ? 'Active' : 'Inactive'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-success me-1" onclick="rechargeCard('${card.card_id}')">
-                                Recharge
-                            </button>
-                            <button class="btn btn-sm btn-${card.active ? 'danger' : 'success'}" 
-                                    onclick="toggleCardStatus('${card.card_id}', ${card.active})">
-                                ${card.active ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        })
-        .catch(error => {
-            console.error('Error loading cards:', error);
-        });
-    }
-
-    // Load transactions
-    function loadTransactions() {
-        const token = localStorage.getItem('access_token');
-        axios.get('/api/transactions/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => {
-            const tbody = document.getElementById('transactionsList');
-            tbody.innerHTML = '';
-            response.data.forEach(transaction => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${new Date(transaction.timestamp).toLocaleString()}</td>
-                        <td>${transaction.transaction_type}</td>
-                        <td>₹${transaction.amount}</td>
-                        <td>${transaction.secure_key}</td>
-                        <td>${transaction.outlet ? transaction.outlet.name : '-'}</td>
-                        <td><span class="badge bg-success">Completed</span></td>
-                    </tr>
-                `;
-            });
-        })
-        .catch(error => {
-            console.error('Error loading transactions:', error);
-        });
-    }
-
-    // Load settlements
-    function loadSettlements() {
-        const token = localStorage.getItem('access_token');
-        axios.get('/api/settlements/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => {
-            const tbody = document.getElementById('settlementsList');
-            tbody.innerHTML = '';
-            response.data.forEach(settlement => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${settlement.outlet.name}</td>
-                        <td>₹${settlement.amount}</td>
-                        <td>${settlement.transaction_count}</td>
-                        <td>
-                            <span class="badge bg-${settlement.status === 'completed' ? 'success' : 'warning'}">
-                                ${settlement.status}
-                            </span>
-                        </td>
-                        <td>
-                            ${settlement.status === 'pending' ? 
-                                `<button class="btn btn-sm btn-success" 
-                                         onclick="processSettlement(${settlement.id})">
-                                    Process
-                                </button>` : 
-                                '-'}
-                        </td>
-                    </tr>
-                `;
-            });
-        })
-        .catch(error => {
-            console.error('Error loading settlements:', error);
-        });
-    }
-
-    // Initialize charts
-    function initializeCharts() {
-        const token = localStorage.getItem('access_token');
-        axios.get('/api/admin-dashboard/analytics/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(response => {
-            // Transaction Chart
-            new Chart(document.getElementById('transactionChart'), {
-                type: 'line',
-                data: {
-                    labels: response.data.transaction_labels,
-                    datasets: [{
-                        label: 'Daily Transactions',
-                        data: response.data.transaction_data,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                }
-            });
-
-            // Revenue Chart
-            new Chart(document.getElementById('revenueChart'), {
-                type: 'bar',
-                data: {
-                    labels: response.data.revenue_labels,
-                    datasets: [{
-                        label: 'Daily Revenue',
-                        data: response.data.revenue_data,
-                        backgroundColor: 'rgb(54, 162, 235)'
-                    }]
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error loading analytics:', error);
-        });
-    }
-
-    // Event Listeners
-    document.getElementById('issueCardBtn').addEventListener('click', function() {
-        new bootstrap.Modal(document.getElementById('issueCardModal')).show();
-    });
-
-    document.getElementById('rechargeCardBtn').addEventListener('click', function() {
-        new bootstrap.Modal(document.getElementById('rechargeModal')).show();
-    });
-
-    // Initialize dashboard
-    loadDashboardData();
-    loadCards();
-    loadTransactions();
-    loadSettlements();
-    initializeCharts();
-
-    // Refresh data periodically
-    setInterval(loadDashboardData, 30000);
-    setInterval(loadCards, 60000);
-    setInterval(loadTransactions, 60000);
-    setInterval(loadSettlements, 60000);
-});
-
-// Card Management Functions
-function rechargeCard(cardId) {
-    document.getElementById('cardIdRecharge').value = cardId;
-    new bootstrap.Modal(document.getElementById('rechargeModal')).show();
-}
-
-function toggleCardStatus(cardId, currentStatus) {
-    const token = localStorage.getItem('access_token');
-    axios.post(`/api/cards/${cardId}/toggle/`, {
-        active: !currentStatus
-    }, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(() => {
-        loadCards();
-    })
-    .catch(error => {
-        console.error('Error toggling card status:', error);
-        alert('Failed to update card status');
-    });
-}
-
-function processSettlement(settlementId) {
-    const token = localStorage.getItem('access_token');
-    axios.post(`/api/settlements/${settlementId}/process/`, {}, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(() => {
-        loadSettlements();
-        loadDashboardData();
-    })
-    .catch(error => {
-        console.error('Error processing settlement:', error);
-        alert('Failed to process settlement');
-    });
-}
-</script>
+<script src="{% static 'js/admin-analytics.js' %}"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

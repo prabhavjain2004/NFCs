@@ -4,156 +4,97 @@
 {% block title %}Profile - NFC Payment System{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Profile Information -->
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Profile Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px;">
-                            <i class="fas fa-user fa-3x text-primary"></i>
+        <div class="bg-white rounded-lg shadow-lg mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Profile Information</h2>
+            </div>
+            
+            <div class="p-6">
+                <form id="profileForm" class="space-y-6">
+                    <!-- Basic Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" value="{{ user.username }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" readonly>
                         </div>
-                        <h4>{{ user.get_full_name }}</h4>
-                        <span class="badge bg-primary">{{ user.user_type|title }}</span>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" value="{{ user.email }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            <input type="text" name="first_name" value="{{ user.first_name }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <input type="text" name="last_name" value="{{ user.last_name }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" name="phone" value="{{ user.phone }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                            <input type="text" value="{{ user.get_user_type_display }}" class="w-full rounded-lg border-gray-300 bg-gray-50" readonly>
+                        </div>
                     </div>
 
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <i class="fas fa-user me-2"></i>Username: {{ user.username }}
-                        </li>
-                        <li class="list-group-item">
-                            <i class="fas fa-envelope me-2"></i>Email: {{ user.email }}
-                        </li>
-                        {% if user.user_type == 'outlet' %}
-                            <li class="list-group-item">
-                                <i class="fas fa-store me-2"></i>Outlet Name: {{ user.outlet.name }}
-                            </li>
-                            <li class="list-group-item">
-                                <i class="fas fa-map-marker-alt me-2"></i>Address: {{ user.outlet.address }}
-                            </li>
-                        {% endif %}
-                        <li class="list-group-item">
-                            <i class="fas fa-clock me-2"></i>Member since: {{ user.date_joined|date:"M d, Y" }}
-                        </li>
-                    </ul>
-                </div>
+                    <!-- Outlet Information (if applicable) -->
+                    {% if user.is_outlet %}
+                    <div class="border-t border-gray-200 pt-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Outlet Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Outlet Name</label>
+                                <input type="text" name="outlet_name" value="{{ user.outlet.name }}" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <textarea name="address" rows="3" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">{{ user.outlet.address }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Save Button -->
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <!-- Profile Settings -->
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Update Profile</h5>
-                </div>
-                <div class="card-body">
-                    <form id="profileUpdateForm">
-                        <div class="row g-3">
-                            {% if user.user_type == 'customer' %}
-                                <div class="col-md-6">
-                                    <label class="form-label">First Name</label>
-                                    <input type="text" class="form-control" name="first_name" value="{{ user.first_name }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" name="last_name" value="{{ user.last_name }}">
-                                </div>
-                            {% elif user.user_type == 'outlet' %}
-                                <div class="col-12">
-                                    <label class="form-label">Outlet Name</label>
-                                    <input type="text" class="form-control" name="outlet_name" value="{{ user.outlet.name }}">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Address</label>
-                                    <textarea class="form-control" name="address" rows="3">{{ user.outlet.address }}</textarea>
-                                </div>
-                            {% endif %}
-                            <div class="col-12">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" value="{{ user.email }}">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" name="phone" value="{{ user.phone }}">
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+        <!-- Change Password -->
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-900">Change Password</h2>
             </div>
-
-            <!-- Security Settings -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Security Settings</h5>
-                </div>
-                <div class="card-body">
-                    <form id="passwordUpdateForm">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Current Password</label>
-                                <input type="password" class="form-control" name="current_password" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">New Password</label>
-                                <input type="password" class="form-control" name="new_password" required>
-                                <div class="form-text">Must be at least 8 characters long.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Confirm New Password</label>
-                                <input type="password" class="form-control" name="confirm_password" required>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-key me-2"></i>Change Password
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Two-Factor Authentication -->
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Two-Factor Authentication</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="enable2FA" {% if user.two_factor_enabled %}checked{% endif %}>
-                        <label class="form-check-label" for="enable2FA">Enable Two-Factor Authentication</label>
+            
+            <div class="p-6">
+                <form id="passwordForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                        <input type="password" name="current_password" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                     </div>
-                    <div id="2faSetup" class="d-none">
-                        <div class="alert alert-info">
-                            <h6>Setup Instructions:</h6>
-                            <ol class="mb-0">
-                                <li>Install an authenticator app (Google Authenticator, Authy, etc.)</li>
-                                <li>Scan the QR code below</li>
-                                <li>Enter the verification code to complete setup</li>
-                            </ol>
-                        </div>
-                        <div class="text-center mb-3">
-                            <img id="qrCode" src="" alt="QR Code" class="img-fluid">
-                        </div>
-                        <form id="2faVerificationForm">
-                            <div class="mb-3">
-                                <label class="form-label">Verification Code</label>
-                                <input type="text" class="form-control" name="verification_code" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-check me-2"></i>Verify and Enable
-                            </button>
-                        </form>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <input type="password" name="new_password" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
                     </div>
-                </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                        <input type="password" name="confirm_password" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" required>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Update Password
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -163,158 +104,48 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const profileUpdateForm = document.getElementById('profileUpdateForm');
-    const passwordUpdateForm = document.getElementById('passwordUpdateForm');
-    const enable2FA = document.getElementById('enable2FA');
-    const twoFASetup = document.getElementById('2faSetup');
-    const twoFAVerificationForm = document.getElementById('2faVerificationForm');
-
-    // Profile Update
-    profileUpdateForm.addEventListener('submit', async function(e) {
+    // Profile Update Form
+    const profileForm = document.getElementById('profileForm');
+    profileForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        const formData = new FormData(this);
         try {
-            const formData = new FormData(this);
-            const response = await axios.post('/api/users/profile/update/', 
-                Object.fromEntries(formData),
-                { headers: window.authManager.getAuthHeaders() }
-            );
-            
+            const response = await axios.post('/api/profile/update/', Object.fromEntries(formData));
             showAlert('Profile updated successfully', 'success');
-            setTimeout(() => location.reload(), 1500);
         } catch (error) {
-            showAlert(error.response?.data?.message || 'Failed to update profile', 'danger');
+            showAlert(error.response?.data?.message || 'Failed to update profile', 'error');
         }
     });
 
-    // Password Update
-    passwordUpdateForm.addEventListener('submit', async function(e) {
+    // Password Change Form
+    const passwordForm = document.getElementById('passwordForm');
+    passwordForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(this);
         
+        const formData = new FormData(this);
         if (formData.get('new_password') !== formData.get('confirm_password')) {
-            showAlert('New passwords do not match', 'danger');
+            showAlert('New passwords do not match', 'error');
             return;
         }
 
         try {
-            const response = await axios.post('/api/users/password/change/',
-                Object.fromEntries(formData),
-                { headers: window.authManager.getAuthHeaders() }
-            );
-            
-            showAlert('Password changed successfully', 'success');
+            const response = await axios.post('/api/profile/change-password/', Object.fromEntries(formData));
+            showAlert('Password updated successfully', 'success');
             this.reset();
         } catch (error) {
-            showAlert(error.response?.data?.message || 'Failed to change password', 'danger');
-        }
-    });
-
-    // Two-Factor Authentication
-    enable2FA.addEventListener('change', async function() {
-        if (this.checked) {
-            try {
-                const response = await axios.post('/api/users/2fa/setup/',
-                    {},
-                    { headers: window.authManager.getAuthHeaders() }
-                );
-                
-                document.getElementById('qrCode').src = response.data.qr_code;
-                twoFASetup.classList.remove('d-none');
-            } catch (error) {
-                showAlert('Failed to setup 2FA', 'danger');
-                this.checked = false;
-            }
-        } else {
-            if (confirm('Are you sure you want to disable two-factor authentication?')) {
-                try {
-                    await axios.post('/api/users/2fa/disable/',
-                        {},
-                        { headers: window.authManager.getAuthHeaders() }
-                    );
-                    
-                    twoFASetup.classList.add('d-none');
-                    showAlert('Two-factor authentication disabled', 'success');
-                } catch (error) {
-                    showAlert('Failed to disable 2FA', 'danger');
-                    this.checked = true;
-                }
-            } else {
-                this.checked = true;
-            }
-        }
-    });
-
-    // 2FA Verification
-    twoFAVerificationForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        try {
-            const formData = new FormData(this);
-            const response = await axios.post('/api/users/2fa/verify/',
-                Object.fromEntries(formData),
-                { headers: window.authManager.getAuthHeaders() }
-            );
-            
-            showAlert('Two-factor authentication enabled successfully', 'success');
-            twoFASetup.classList.add('d-none');
-        } catch (error) {
-            showAlert('Invalid verification code', 'danger');
+            showAlert(error.response?.data?.message || 'Failed to update password', 'error');
         }
     });
 
     function showAlert(message, type) {
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.querySelector('.container').insertBefore(alert, document.querySelector('.row'));
-        
-        setTimeout(() => {
-            alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 150);
-        }, 3000);
-    }
-
-    // Password strength validation
-    document.querySelector('input[name="new_password"]').addEventListener('input', function() {
-        const password = this.value;
-        const strength = validatePasswordStrength(password);
-        
-        this.classList.remove('is-valid', 'is-invalid');
-        if (password) {
-            this.classList.add(strength.isValid ? 'is-valid' : 'is-invalid');
-            this.nextElementSibling.textContent = strength.message;
-        }
-    });
-
-    function validatePasswordStrength(password) {
-        if (password.length < 8) {
-            return {
-                isValid: false,
-                message: 'Password must be at least 8 characters long'
-            };
-        }
-
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumbers = /\d/.test(password);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-        const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
-            .filter(Boolean).length;
-
-        if (strength < 3) {
-            return {
-                isValid: false,
-                message: 'Password must contain uppercase, lowercase, numbers, and special characters'
-            };
-        }
-
-        return {
-            isValid: true,
-            message: 'Password strength: Strong'
-        };
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg ${
+            type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`;
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
     }
 });
 </script>

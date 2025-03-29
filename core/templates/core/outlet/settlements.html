@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settlements - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Settlement Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-600 text-white rounded-lg shadow-lg">
+            <div class="p-6">
+                <h5 class="text-lg font-medium mb-2">Pending Settlement</h5>
+                <h2 id="pendingAmount" class="text-3xl font-bold">₹0.00</h2>
+                <small>From <span id="pendingTransactions">0</span> transactions</small>
+            </div>
+        </div>
+        <div class="bg-green-600 text-white rounded-lg shadow-lg">
+            <div class="p-6">
+                <h5 class="text-lg font-medium mb-2">Last Settlement</h5>
+                <h2 id="lastSettlementAmount" class="text-3xl font-bold">₹0.00</h2>
+                <small>On <span id="lastSettlementDate">-</span></small>
+            </div>
+        </div>
+        <div class="bg-blue-500 text-white rounded-lg shadow-lg">
+            <div class="p-6">
+                <h5 class="text-lg font-medium mb-2">Total Settled (This Month)</h5>
+                <h2 id="monthlySettled" class="text-3xl font-bold">₹0.00</h2>
+                <small>From <span id="monthlyTransactions">0</span> transactions</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settlement History -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="bg-gray-700 text-white px-6 py-4 rounded-t-lg flex justify-between items-center">
+            <h5 class="text-lg font-medium">Settlement History</h5>
+            <div class="flex space-x-2">
+                <button class="bg-white text-gray-700 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100 active" data-period="week">This Week</button>
+                <button class="bg-white text-gray-700 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100" data-period="month">This Month</button>
+                <button class="bg-white text-gray-700 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100" data-period="all">All Time</button>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Settlement Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transactions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period Covered</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="settlementsList" class="divide-y divide-gray-200">
+                        <!-- Settlements will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settlement Details Modal -->
+<div class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center" id="settlementModal">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h5 class="text-lg font-medium text-gray-900">Settlement Details</h5>
+            <button type="button" class="text-gray-400 hover:text-gray-500" data-dismiss="modal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <div class="settlement-info mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p class="mb-2"><strong>Settlement ID:</strong> <span id="settlementId"></span></p>
+                        <p class="mb-2"><strong>Status:</strong> <span id="settlementStatus"></span></p>
+                        <p class="mb-2"><strong>Total Amount:</strong> ₹<span id="settlementAmount"></span></p>
+                    </div>
+                    <div>
+                        <p class="mb-2"><strong>Date:</strong> <span id="settlementDate"></span></p>
+                        <p class="mb-2"><strong>Period:</strong> <span id="settlementPeriod"></span></p>
+                        <p class="mb-2"><strong>Transaction Count:</strong> <span id="transactionCount"></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="settlement-transactions">
+                <h6 class="text-lg font-medium text-gray-900 mb-4">Included Transactions</h6>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsList" class="divide-y divide-gray-200">
+                        <!-- Transactions will be loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadSummary();
+    loadSettlements('week');
+    setupEventListeners();
+});
+
+function loadSummary() {
+    const token = localStorage.getItem('access_token');
+    axios.get('/api/settlements/outlet-summary/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(response => {
+        document.getElementById('pendingAmount').textContent = `₹${response.data.pending_amount}`;
+        document.getElementById('pendingTransactions').textContent = response.data.pending_transactions;
+        document.getElementById('lastSettlementAmount').textContent = `₹${response.data.last_settlement_amount}`;
+        document.getElementById('lastSettlementDate').textContent = new Date(response.data.last_settlement_date).toLocaleDateString();
+        document.getElementById('monthlySettled').textContent = `₹${response.data.monthly_settled}`;
+        document.getElementById('monthlyTransactions').textContent = response.data.monthly_transactions;
+    })
+    .catch(error => {
+        console.error('Error loading summary:', error);
+    });
+}
+
+function loadSettlements(period = 'week') {
+    const token = localStorage.getItem('access_token');
+    axios.get(`/api/settlements/outlet/?period=${period}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(response => {
+        const tbody = document.getElementById('settlementsList');
+        tbody.innerHTML = '';
+        response.data.forEach(settlement => {
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(settlement.timestamp).toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${settlement.amount}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${settlement.transaction_count}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${settlement.period_start} - ${settlement.period_end}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            settlement.status === 'completed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }">
+                            ${settlement.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600" onclick="viewSettlement(${settlement.id})">
+                            View Details
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    })
+    .catch(error => {
+        console.error('Error loading settlements:', error);
+    });
+}
+
+function setupEventListeners() {
+    // Period filter buttons
+    document.querySelectorAll('[data-period]').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelector('[data-period].active').classList.remove('active');
+            e.target.classList.add('active');
+            loadSettlements(e.target.dataset.period);
+        });
+    });
+}
+
+function viewSettlement(settlementId) {
+    const token = localStorage.getItem('access_token');
+    axios.get(`/api/settlements/${settlementId}/`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(response => {
+        const settlement = response.data;
+        
+        // Update settlement information
+        document.getElementById('settlementId').textContent = settlement.id;
+        document.getElementById('settlementStatus').textContent = settlement.status;
+        document.getElementById('settlementAmount').textContent = settlement.amount;
+        document.getElementById('settlementDate').textContent = new Date(settlement.timestamp).toLocaleString();
+        document.getElementById('settlementPeriod').textContent = `${settlement.period_start} - ${settlement.period_end}`;
+        document.getElementById('transactionCount').textContent = settlement.transaction_count;
+
+        // Update transactions list
+        const tbody = document.getElementById('transactionsList');
+        tbody.innerHTML = '';
+        settlement.transactions.forEach(transaction => {
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(transaction.timestamp).toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${transaction.card_id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">₹${transaction.amount}</td>
+                </tr>
+            `;
+        });
+
+        // Show modal
+        document.getElementById('settlementModal').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error loading settlement details:', error);
+        alert('Failed to load settlement details');
+    });
+}
+</script>
+{% endblock %}

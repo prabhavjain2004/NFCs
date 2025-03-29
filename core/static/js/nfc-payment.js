@@ -264,3 +264,162 @@ document.addEventListener('DOMContentLoaded', () => {
     window.paymentProcessor = paymentProcessor;
     window.paymentUI = paymentUI;
 });
+
+// NFC Payment Handling
+
+let nfcReader = null;
+let isReading = false;
+
+// Initialize NFC reader
+async function initNFC() {
+    if (!('NDEFReader' in window)) {
+        showNFCStatus('NFC is not supported on this device', 'error');
+        return;
+    }
+
+    try {
+        nfcReader = new NDEFReader();
+        await nfcReader.scan();
+        showNFCStatus('Ready to read NFC card', 'ready');
+    } catch (error) {
+        showNFCStatus('Error initializing NFC reader', 'error');
+        console.error('NFC initialization error:', error);
+    }
+}
+
+// Start NFC payment process
+async function startNFCPayment() {
+    const amount = document.getElementById('amount').value;
+    const description = document.getElementById('description')?.value || '';
+
+    if (!amount || amount <= 0) {
+        showErrorMessage('Please enter a valid amount');
+        return;
+    }
+
+    if (!nfcReader) {
+        await initNFC();
+    }
+
+    showPaymentModal();
+    isReading = true;
+
+    try {
+        nfcReader.onreading = event => handleNFCReading(event, amount, description);
+        showNFCStatus('Please tap the card', 'waiting');
+    } catch (error) {
+        showNFCStatus('Error starting NFC reader', 'error');
+        console.error('NFC reading error:', error);
+    }
+}
+
+// Handle NFC card reading
+async function handleNFCReading(event, amount, description) {
+    if (!isReading) return;
+    isReading = false;
+
+    showNFCStatus('Processing payment...', 'processing');
+
+    try {
+        const cardData = await parseNFCData(event.message);
+        const response = await processPayment(cardData, amount, description);
+        
+        if (response.ok) {
+            const result = await response.json();
+            showPaymentResult(true, {
+                amount: amount,
+                cardId: cardData.cardId,
+                transactionId: result.transaction_id
+            });
+        } else {
+            throw new Error('Payment processing failed');
+        }
+    } catch (error) {
+        showPaymentResult(false, { error: error.message });
+        console.error('Payment error:', error);
+    }
+}
+
+// Parse NFC card data
+async function parseNFCData(message) {
+    // Implement secure card data parsing
+    // This is a placeholder - actual implementation would depend on your card data format
+    return {
+        cardId: message.records[0].data,
+        secureKey: message.records[1].data
+    };
+}
+
+// Process payment with backend
+async function processPayment(cardData, amount, description) {
+    return fetch('/api/transactions/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+            transaction_type: 'payment',
+            amount: parseFloat(amount),
+            card_id: cardData.cardId,
+            secure_key: cardData.secureKey,
+            description: description
+        })
+    });
+}
+
+// UI Functions
+function showPaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    modal.style.display = 'block';
+    document.querySelector('.payment-processing').style.display = 'block';
+    document.querySelector('.payment-result').style.display = 'none';
+}
+
+function closePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    modal.style.display = 'none';
+    isReading = false;
+}
+
+function showPaymentResult(success, data) {
+    const resultDiv = document.querySelector('.payment-result');
+    const processingDiv = document.querySelector('.payment-processing');
+    
+    processingDiv.style.display = 'none';
+    resultDiv.style.display = 'block';
+
+    const statusSpan = resultDiv.querySelector('.status');
+    const resultIcon = resultDiv.querySelector('.result-icon');
+
+    if (success) {
+        statusSpan.textContent = 'Successful';
+        statusSpan.className = 'status success';
+        resultIcon.className = 'result-icon success';
+        
+        resultDiv.querySelector('.amount').textContent = data.amount;
+        resultDiv.querySelector('.card-id').textContent = data.cardId;
+        resultDiv.querySelector('.transaction-id').textContent = data.transactionId;
+    } else {
+        statusSpan.textContent = 'Failed';
+        statusSpan.className = 'status error';
+        resultIcon.className = 'result-icon error';
+        
+        const details = resultDiv.querySelector('.details');
+        details.innerHTML = `<p class="error-message">${data.error}</p>`;
+    }
+}
+
+function showNFCStatus(message, status) {
+    const statusDiv = document.getElementById('nfcStatus');
+    if (!statusDiv) return;
+
+    const icon = statusDiv.querySelector('.status-icon');
+    const text = statusDiv.querySelector('span');
+
+    icon.className = `status-icon ${status}`;
+    text.textContent = message;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initNFC);

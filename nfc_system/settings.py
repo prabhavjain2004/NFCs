@@ -28,7 +28,7 @@ if os.path.isfile(dotenv_file):
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3gc!t68l$(wr#$^s9z6mz1t-4b22ocul2@ae(9s)2)bbqb=x&a'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DBUG_STATUS')
@@ -90,7 +90,7 @@ DATABASES = {
     'default': {
         'ENGINE': os.getenv('ENGINE'),
         'NAME': os.getenv('NAME'),
-        'USER': 'postgres.zaicqjglcouurxejlmsk',
+        'USER': 'postgres.cfkgsxcjtfgkqsuiwuco',
         'PASSWORD': os.getenv('PASSWORD'),
         'HOST': os.getenv('HOST'),
         'PORT': os.getenv('PORT'),
@@ -135,6 +135,14 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "core/static"),
+]
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
