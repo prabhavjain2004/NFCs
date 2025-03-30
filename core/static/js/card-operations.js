@@ -326,8 +326,28 @@ class CardOperationsHandler {
                 await reader.scan();
                 console.log('NFC permission granted, scanning...');
 
+                // Set a timeout for the scan
+                const scanTimeout = setTimeout(() => {
+                    try {
+                        reader.stop();
+                        this.showStatus('Scan timeout. Please try again.', 'error');
+                        this.isProcessing = false;
+                    } catch (e) {
+                        console.error('Error stopping reader:', e);
+                    }
+                }, 30000); // 30 seconds timeout
+
                 reader.onreading = async ({ message, serialNumber }) => {
+                    clearTimeout(scanTimeout); // Clear the timeout
                     console.log('NFC card detected:', serialNumber);
+                    
+                    // Make sure we have a valid serial number
+                    if (!serialNumber || serialNumber.trim() === '') {
+                        this.showStatus('Invalid NFC card ID. Please try again.', 'error');
+                        this.isProcessing = false;
+                        reader.stop();
+                        return;
+                    }
                     
                     // Handle the scan based on the operation
                     if (operation === 'issuance') {
@@ -351,14 +371,24 @@ class CardOperationsHandler {
                         await this.handleBalanceInquiry(serialNumber);
                     }
                     
-                    reader.stop();
+                    try {
+                        reader.stop();
+                    } catch (e) {
+                        console.error('Error stopping reader:', e);
+                    }
                     this.isProcessing = false;
                 };
 
                 reader.onreadingerror = (event) => {
+                    clearTimeout(scanTimeout); // Clear the timeout
                     console.error('Reading error:', event);
                     this.showStatus('Error reading NFC card. Please try again.', 'error');
                     this.isProcessing = false;
+                    try {
+                        reader.stop();
+                    } catch (e) {
+                        console.error('Error stopping reader:', e);
+                    }
                 };
             } catch (nfcError) {
                 console.error('NFC error:', nfcError);
@@ -477,12 +507,17 @@ class CardOperationsHandler {
 
             this.showStatus('Issuing card...', 'info');
 
+            // Get the CSRF token
+            const csrftoken = this.getCookie('csrftoken');
+            
             const response = await fetch('/api/cards/issue/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
+                credentials: 'same-origin', // Include cookies in the request
                 body: JSON.stringify({
                     customer_name: customerName,
                     customer_mobile: customerMobile,
@@ -492,10 +527,16 @@ class CardOperationsHandler {
                 })
             });
 
-            const result = await response.json();
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error('Invalid response from server');
+            }
 
             if (response.ok) {
-                this.showStatus(`Card issued successfully! Card ID: ${result.card_id}`, 'success');
+                this.showStatus(`Card issued successfully! Card ID: ${result.card_id || 'Unknown'}`, 'success');
                 
                 // Reset the form and state
                 this.secondScanPending = false;
@@ -605,15 +646,24 @@ class CardOperationsHandler {
             // Find the card by secure key (NFC ID)
             const cardsResponse = await fetch('/api/cards/', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                credentials: 'same-origin' // Include cookies in the request
             });
             
             if (!cardsResponse.ok) {
                 throw new Error('Failed to load cards');
             }
             
-            const cards = await cardsResponse.json();
+            let cards;
+            try {
+                cards = await cardsResponse.json();
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error('Invalid response from server when loading cards');
+            }
+            
             const matchingCard = cards.find(card => card.secure_key === cardId);
             
             if (!matchingCard) {
@@ -625,17 +675,25 @@ class CardOperationsHandler {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken'),
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 },
+                credentials: 'same-origin', // Include cookies in the request
                 body: JSON.stringify({
                     amount: topupAmount
                 })
             });
 
-            const result = await response.json();
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error('Invalid response from server during top-up');
+            }
 
             if (response.ok) {
-                this.showStatus(`Top-up successful! New balance: ₹${result.new_balance}`, 'success');
+                this.showStatus(`Top-up successful! New balance: ₹${result.new_balance || 0}`, 'success');
                 
                 // Reset the form and state
                 this.secondScanPending = false;
@@ -673,25 +731,48 @@ class CardOperationsHandler {
             // Find the card by secure key (NFC ID)
             const response = await fetch('/api/cards/', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                credentials: 'same-origin' // Include cookies in the request
             });
             
             if (!response.ok) {
                 throw new Error('Failed to load cards');
             }
             
-            const cards = await response.json();
+            let cards;
+            try {
+                cards = await response.json();
+            } catch (e) {
+                console.error('Error parsing JSON response:', e);
+                throw new Error('Invalid response from server when loading cards');
+            }
+            
             const matchingCard = cards.find(card => card.secure_key === cardId);
             
             if (matchingCard) {
                 // Display balance information
-                document.getElementById('balanceCardId').querySelector('span').textContent = matchingCard.card_id;
-                document.getElementById('balanceCustomerName').querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
-                document.getElementById('balanceAmount').textContent = matchingCard.balance;
+                const balanceCardIdElement = document.getElementById('balanceCardId');
+                if (balanceCardIdElement && balanceCardIdElement.querySelector('span')) {
+                    balanceCardIdElement.querySelector('span').textContent = matchingCard.card_id;
+                }
+                
+                const balanceCustomerNameElement = document.getElementById('balanceCustomerName');
+                if (balanceCustomerNameElement && balanceCustomerNameElement.querySelector('span')) {
+                    balanceCustomerNameElement.querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
+                }
+                
+                const balanceAmountElement = document.getElementById('balanceAmount');
+                if (balanceAmountElement) {
+                    balanceAmountElement.textContent = matchingCard.balance;
+                }
                 
                 // Show the balance result
-                document.getElementById('balanceResult').classList.remove('hidden');
+                const balanceResultElement = document.getElementById('balanceResult');
+                if (balanceResultElement) {
+                    balanceResultElement.classList.remove('hidden');
+                }
                 
                 this.showStatus(`Balance inquiry successful!`, 'success');
             } else {

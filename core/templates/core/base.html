@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -137,6 +138,9 @@
             mobileMenu.classList.toggle('hidden');
         });
     </script>
+    
+    <!-- Core JS -->
+    <script src="{% static 'js/main.js' %}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
