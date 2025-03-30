@@ -27,44 +27,44 @@
                 <div class="p-6">
                     <form id="issueCardForm" class="space-y-4">
                         <div>
-                            <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                            <label for="customerName" class="block text-base font-medium text-gray-700 mb-2">Customer Name</label>
                             <input type="text" id="customerName" required
-                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-lg">
                         </div>
                         <div>
-                            <label for="customerMobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                            <label for="customerMobile" class="block text-base font-medium text-gray-700 mb-2">Mobile Number</label>
                             <input type="tel" id="customerMobile" required
-                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-lg">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Initial Balance (₹)</label>
+                            <label class="block text-base font-medium text-gray-700 mb-2">Initial Balance (₹)</label>
                             <input type="hidden" id="initialBalance" value="0">
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="50">
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="50">
                                     ₹50
                                 </button>
-                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="100">
+                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="100">
                                     ₹100
                                 </button>
-                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="500">
+                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="500">
                                     ₹500
                                 </button>
-                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="1000">
+                                <button type="button" class="balance-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="1000">
                                     ₹1000
                                 </button>
                             </div>
-                            <p id="selectedBalance" class="mt-2 text-sm text-gray-600">Selected: ₹0</p>
+                            <p id="selectedBalance" class="mt-3 text-base font-medium text-blue-600">Selected: ₹0</p>
                         </div>
                         <input type="hidden" id="userId" value="{{ request.user.id }}">
                         <input type="hidden" id="nfcCardId" value="">
                         
-                        <div class="flex space-x-2">
+                        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                             <button type="button" id="scanCardBtn"
-                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                    class="w-full sm:flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors">
                                 <i class="fas fa-wifi mr-2"></i> Scan NFC Card
                             </button>
                             <button type="submit" id="issueCardBtn"
-                                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    class="w-full sm:flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                 <i class="fas fa-credit-card mr-2"></i> Issue Card
                             </button>
                         </div>
@@ -80,39 +80,39 @@
                 <div class="p-6">
                     <form id="topupForm" class="space-y-4">
                         <div>
-                            <label for="cardSelect" class="block text-sm font-medium text-gray-700 mb-1">Select Card</label>
-                            <div class="flex space-x-2">
+                            <label for="cardSelect" class="block text-base font-medium text-gray-700 mb-2">Select Card</label>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                 <select id="cardSelect" required
-                                       class="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                       class="w-full sm:flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 text-lg">
                                     <option value="">Select a card</option>
                                 </select>
                                 <button type="button" id="scanTopupCardBtn"
-                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                        class="w-full sm:w-auto bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                                     <i class="fas fa-wifi"></i> Scan
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Top-up Amount (₹)</label>
+                            <label class="block text-base font-medium text-gray-700 mb-2">Top-up Amount (₹)</label>
                             <input type="hidden" id="topupAmount" value="0">
-                            <div class="grid grid-cols-2 gap-2">
-                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="50">
+                            <div class="grid grid-cols-2 gap-3">
+                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="50">
                                     ₹50
                                 </button>
-                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="100">
+                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="100">
                                     ₹100
                                 </button>
-                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="500">
+                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="500">
                                     ₹500
                                 </button>
-                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="1000">
+                                <button type="button" class="topup-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-4 rounded-lg transition-colors text-lg font-medium" data-amount="1000">
                                     ₹1000
                                 </button>
                             </div>
-                            <p id="selectedTopupAmount" class="mt-2 text-sm text-gray-600">Selected: ₹0</p>
+                            <p id="selectedTopupAmount" class="mt-3 text-base font-medium text-blue-600">Selected: ₹0</p>
                         </div>
                         <button type="submit" id="topupBtn"
-                                class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                class="w-full bg-green-600 text-white px-4 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium">
                             Top-up Card
                         </button>
                     </form>

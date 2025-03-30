@@ -196,26 +196,26 @@ class CardOperationsHandler {
                 }
 
                 this.cardList.innerHTML = cards.map(card => `
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h4 class="text-lg font-medium text-gray-900">${card.card_id}</h4>
-                                <p class="text-sm text-gray-600">
+                    <div class="bg-gray-50 rounded-lg p-5 border border-gray-200 mb-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                            <div class="mb-4 sm:mb-0">
+                                <h4 class="text-xl font-medium text-gray-900">${card.card_id}</h4>
+                                <p class="text-base text-gray-600 mt-2">
                                     <span class="font-medium">Customer:</span> ${card.customer_name || 'N/A'} 
-                                    ${card.customer_mobile ? `(${card.customer_mobile})` : ''}
+                                    ${card.customer_mobile ? `<br><span class="font-medium">Mobile:</span> ${card.customer_mobile}` : ''}
                                 </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Balance:</span> ₹${card.balance}
+                                <p class="text-base text-gray-600 mt-2">
+                                    <span class="font-medium">Balance:</span> <span class="text-lg">₹${card.balance}</span>
                                 </p>
-                                <p class="text-sm text-gray-600">
+                                <p class="text-base text-gray-600 mt-2">
                                     <span class="font-medium">Status:</span> 
-                                    <span class="${card.active ? 'text-green-600' : 'text-red-600'}">
+                                    <span class="${card.active ? 'text-green-600' : 'text-red-600'} font-medium">
                                         ${card.active ? 'Active' : 'Inactive'}
                                     </span>
                                 </p>
                             </div>
                             <div>
-                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors card-topup-btn" data-card-id="${card.id}">
+                                <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors card-topup-btn text-lg font-medium" data-card-id="${card.id}">
                                     Top-up
                                 </button>
                             </div>
