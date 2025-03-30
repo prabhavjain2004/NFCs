@@ -1,0 +1,249 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h1>
+    
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Cards -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                        <i class="fas fa-credit-card text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Cards</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.total_cards }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Outlets -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <i class="fas fa-store text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Active Outlets</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.active_outlets }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Transactions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <i class="fas fa-exchange-alt text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Transactions</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ stats.total_transactions }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Revenue -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                        <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">₹{{ stats.total_revenue }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Outlets Overview -->
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Outlets Overview</h2>
+    <div class="bg-white shadow overflow-hidden sm:rounded-md mb-8">
+        <ul class="divide-y divide-gray-200">
+            {% for outlet in outlets %}
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-store text-gray-600"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-indigo-600">{{ outlet.name }}</div>
+                                <div class="text-sm text-gray-500">{{ outlet.business_type }}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if outlet.active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if outlet.active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if outlet.summary %}
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <div class="text-sm text-gray-500">Total Transactions</div>
+                            <div class="text-sm font-medium text-gray-900">{{ outlet.summary.total_transactions }}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">Total Revenue</div>
+                            <div class="text-sm font-medium text-gray-900">₹{{ outlet.summary.total_amount }}</div>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-500">Last Transaction</div>
+                            <div class="text-sm font-medium text-gray-900">
+                                {% if outlet.summary.last_transaction_date %}
+                                    {{ outlet.summary.last_transaction_date|date:"M d, Y H:i" }}
+                                {% else %}
+                                    No transactions yet
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% empty %}
+            <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
+                No outlets found
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <!-- Quick Actions -->
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{% url 'card-management' %}" class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50">
+            <div class="px-4 py-5 sm:p-6 flex items-center">
+                <div class="flex-shrink-0 bg-indigo-100 rounded-md p-3">
+                    <i class="fas fa-credit-card text-indigo-600 text-xl"></i>
+                </div>
+                <div class="ml-5">
+                    <h3 class="text-lg font-medium text-gray-900">Card Management</h3>
+                    <p class="text-sm text-gray-500">Manage NFC cards and balances</p>
+                </div>
+            </div>
+        </a>
+        
+        <a href="{% url 'transactions' %}" class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50">
+            <div class="px-4 py-5 sm:p-6 flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                    <i class="fas fa-exchange-alt text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-5">
+                    <h3 class="text-lg font-medium text-gray-900">Transactions</h3>
+                    <p class="text-sm text-gray-500">View all transaction history</p>
+                </div>
+            </div>
+        </a>
+        
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50">
+            <div class="px-4 py-5 sm:p-6 flex items-center">
+                <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-5">
+                    <h3 class="text-lg font-medium text-gray-900">Reports</h3>
+                    <p class="text-sm text-gray-500">Generate financial reports</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NFC Card Actions -->
+    <h2 class="text-2xl font-bold text-gray-900 mb-4 mt-8">NFC Card Actions</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Issue Card -->
+        <button id="issueCardBtn" class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 p-4 flex items-center justify-center">
+            <div class="text-center">
+                <i class="fas fa-id-card text-indigo-600 text-xl mb-2"></i>
+                <h3 class="text-lg font-medium text-gray-900">Issue Card</h3>
+            </div>
+        </button>
+        <!-- Top-Up -->
+        <button id="topUpBtn" class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 p-4 flex items-center justify-center">
+            <div class="text-center">
+                <i class="fas fa-wallet text-green-600 text-xl mb-2"></i>
+                <h3 class="text-lg font-medium text-gray-900">Top-Up</h3>
+            </div>
+        </button>
+        <!-- Balance Inquiry -->
+        <button id="balanceInquiryBtn" class="bg-white overflow-hidden shadow rounded-lg hover:bg-gray-50 p-4 flex items-center justify-center">
+            <div class="text-center">
+                <i class="fas fa-info-circle text-blue-600 text-xl mb-2"></i>
+                <h3 class="text-lg font-medium text-gray-900">Balance Inquiry</h3>
+            </div>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Additional JavaScript for the admin dashboard if needed
+    // Event listeners for the new NFC Card Actions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Issue Card
+        const issueCardBtn = document.getElementById('issueCardBtn');
+        if(issueCardBtn) {
+            issueCardBtn.addEventListener('click', () => {
+                // Trigger Issue Card flow in main.js
+                // For now, we can just do a placeholder console log or custom logic
+                console.log('Issue Card button clicked');
+            });
+        }
+
+        // Top-Up
+        const topUpBtn = document.getElementById('topUpBtn');
+        if(topUpBtn) {
+            topUpBtn.addEventListener('click', () => {
+                // Trigger Top-Up flow in main.js
+                console.log('Top-Up button clicked');
+            });
+        }
+
+        // Balance Inquiry
+        const balanceInquiryBtn = document.getElementById('balanceInquiryBtn');
+        if(balanceInquiryBtn) {
+            balanceInquiryBtn.addEventListener('click', () => {
+                // Trigger Balance Inquiry flow in main.js
+                console.log('Balance Inquiry button clicked');
+            });
+        }
+    });
+</script>
+{% endblock %}

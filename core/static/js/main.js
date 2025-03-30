@@ -1,4 +1,3 @@
-
 // Card ID Handler - Supports both NFC and manual entry
 class CardHandler {
     constructor() {
@@ -391,7 +390,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Export modules for use in other scripts
+/*************************************************************
+ *  Custom flows for Issue Card, Top-Up, and Balance Inquiry *
+ *************************************************************/
+
+// This function handles the double-scan logic for issuing a card,
+// plus collecting Customer Name & Mobile Number
+async function handleIssueCardFlow() {
+    console.log('Initiating Issue Card flow...');
+    // Placeholder logic
+    // 1) Trigger first NFC scan
+    // 2) Show a modal/form to collect Customer Name & Mobile Number
+    // 3) Trigger second NFC scan
+    // 4) Make an API call to finalize card issuance
+}
+
+// This function handles the double-scan logic for topping up,
+// plus prompting for the top-up amount
+async function handleTopUpFlow() {
+    console.log('Initiating Top-Up flow...');
+    // Placeholder logic
+    // 1) Trigger first NFC scan
+    // 2) Show a modal/form to collect the top-up amount
+    // 3) Trigger second NFC scan
+    // 4) Make an API call to complete the top-up
+}
+
+// This function handles a single-scan flow for balance inquiry,
+// analyzing the scanned card ID and returning the balance
+async function handleBalanceInquiryFlow() {
+    console.log('Initiating Balance Inquiry flow...');
+    // Placeholder logic
+    // 1) Trigger single NFC scan
+    // 2) Make an API call to retrieve the balance
+    // 3) Show result to user
+}
+
+// Expose these functions globally so they can be called from the admin_dashboard or elsewhere
+window.handleIssueCardFlow = handleIssueCardFlow;
+window.handleTopUpFlow = handleTopUpFlow;
+window.handleBalanceInquiryFlow = handleBalanceInquiryFlow;
+
+// Keep references in case we want to call them from other places.
 window.cardHandler = cardHandler;
 window.authManager = authManager;
 window.rateLimiter = rateLimiter;

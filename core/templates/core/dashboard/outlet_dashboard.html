@@ -1,0 +1,297 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Outlet Dashboard - NFC Payment System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ outlet.name }} Dashboard</h1>
+    
+    <!-- Outlet Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Transactions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <i class="fas fa-exchange-alt text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Transactions</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ summary.total_transactions }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Revenue -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                        <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">₹{{ summary.total_amount }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Items Sold -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <i class="fas fa-shopping-cart text-white text-xl"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Items Sold</dt>
+                            <dd class="flex items-baseline">
+                                <div class="text-2xl font-semibold text-gray-900">{{ summary.total_items_sold }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Outlet Information -->
+     <!-- Outlet Information -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Outlet Information</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Details about your outlet.</p>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Outlet name</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ outlet.name }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Business type</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ outlet.business_type }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Address</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ outlet.address|default:"Not provided" }}</dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Tax ID</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ outlet.tax_id|default:"Not provided" }}</dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Status</dt>
+                    <dd class="mt-1 text-sm sm:mt-0 sm:col-span-2">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if outlet.active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if outlet.active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Last transaction</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {% if summary.last_transaction_date %}
+                            {{ summary.last_transaction_date|date:"F j, Y, g:i a" }}
+                        {% else %}
+                            No transactions yet
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Transactions</h2>
+    <div class="bg-white shadow overflow-hidden sm:rounded-md mb-8">
+        <ul class="divide-y divide-gray-200">
+            {% for transaction in recent_transactions %}
+            <li>
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full {% if transaction.transaction_type == 'payment' %}bg-blue-100{% else %}bg-green-100{% endif %} flex items-center justify-center">
+                                    <i class="{% if transaction.transaction_type == 'payment' %}fas fa-shopping-cart text-blue-600{% else %}fas fa-plus text-green-600{% endif %}"></i>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-indigo-600">{{ transaction.transaction_id }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {{ transaction.timestamp|date:"M d, Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="text-sm font-medium text-gray-900 mr-4">
+                                {% if transaction.transaction_type == 'payment' %}-{% else %}+{% endif %}₹{{ transaction.amount }}
+                            </div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if transaction.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif transaction.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ transaction.status|title }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if transaction.description %}
+                    <div class="mt-2 text-sm text-gray-500">
+                        {{ transaction.description }}
+                    </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% empty %}
+            <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
+                No transactions found
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="bg-gray-50 px-4 py-3 text-right sm:px-6">
+            <a href="{% url 'outlet-transactions' %}" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                View All Transactions
+            </a>
+        </div>
+    </div>
+    
+    <!-- NFC Payment Section -->
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Process NFC Payment</h2>
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount (₹)</label>
+                    <div class="mt-1">
+                        <input type="number" name="amount" id="amount" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                    <div class="mt-1">
+                        <textarea id="description" name="description" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Transaction details"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button id="startNfcButton" type="button" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-wifi mr-2"></i> Start NFC Payment
+                    </button>
+                </div>
+                
+                <div id="nfcProcessingStatus" class="text-center hidden">
+                    <div class="animate-pulse flex flex-col items-center">
+                        <div class="rounded-full bg-indigo-100 p-4 mb-4">
+                            <i class="fas fa-wifi text-indigo-600 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-700">Waiting for NFC card...</p>
+                        <p class="text-sm text-gray-500 mt-2">Please tap your card on the device</p>
+                    </div>
+                </div>
+                
+                <div id="transactionResult" class="text-center hidden">
+                    <div id="successResult" class="hidden">
+                        <div class="rounded-full bg-green-100 p-4 mb-4 mx-auto w-16 h-16 flex items-center justify-center">
+                            <i class="fas fa-check text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900">Payment Successful!</h3>
+                        <p class="text-sm text-gray-500 mt-2" id="successDetails"></p>
+                    </div>
+                    
+                    <div id="errorResult" class="hidden">
+                        <div class="rounded-full bg-red-100 p-4 mb-4 mx-auto w-16 h-16 flex items-center justify-center">
+                            <i class="fas fa-times text-red-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900">Payment Failed</h3>
+                        <p class="text-sm text-gray-500 mt-2" id="errorDetails"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/nfc-handler.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startNfcButton = document.getElementById('startNfcButton');
+        const nfcProcessingStatus = document.getElementById('nfcProcessingStatus');
+        const transactionResult = document.getElementById('transactionResult');
+        const successResult = document.getElementById('successResult');
+        const errorResult = document.getElementById('errorResult');
+        const successDetails = document.getElementById('successDetails');
+        const errorDetails = document.getElementById('errorDetails');
+        const amountInput = document.getElementById('amount');
+        const descriptionInput = document.getElementById('description');
+        
+        startNfcButton.addEventListener('click', function() {
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            // Show processing status
+            nfcProcessingStatus.classList.remove('hidden');
+            startNfcButton.disabled = true;
+            transactionResult.classList.add('hidden');
+            successResult.classList.add('hidden');
+            errorResult.classList.add('hidden');
+            
+            // Start NFC reading process
+            if (typeof startNfcPayment === 'function') {
+                startNfcPayment(amount, descriptionInput.value)
+                    .then(result => {
+                        // Hide processing status
+                        nfcProcessingStatus.classList.add('hidden');
+                        transactionResult.classList.remove('hidden');
+                        
+                        if (result.success) {
+                            successResult.classList.remove('hidden');
+                            successDetails.textContent = `Transaction ID: ${result.transaction_id}`;
+                            
+                            // Refresh the page after 3 seconds to update the dashboard
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 3000);
+                        } else {
+                            errorResult.classList.remove('hidden');
+                            errorDetails.textContent = result.error || 'Unknown error occurred';
+                        }
+                        
+                        startNfcButton.disabled = false;
+                    })
+                    .catch(error => {
+                        nfcProcessingStatus.classList.add('hidden');
+                        transactionResult.classList.remove('hidden');
+                        errorResult.classList.remove('hidden');
+                        errorDetails.textContent = error.message || 'Failed to process NFC payment';
+                        startNfcButton.disabled = false;
+                    });
+            } else {
+                nfcProcessingStatus.classList.add('hidden');
+                transactionResult.classList.remove('hidden');
+                errorResult.classList.remove('hidden');
+                errorDetails.textContent = 'NFC functionality not available';
+                startNfcButton.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}
