@@ -63,13 +63,17 @@ class CardViewSet(viewsets.ModelViewSet):
             customer_name = request.data.get('customer_name', '')
             customer_mobile = request.data.get('customer_mobile', '')
             nfc_card_id = request.data.get('nfc_card_id', '')
+            is_nfc = request.data.get('isNFC', False)
             
-            # Use the NFC card ID as the secure key if provided, otherwise generate one
-            if nfc_card_id:
-                secure_key = nfc_card_id
-                card_id = f"CARD{nfc_card_id[-8:].upper()}"
+            # Generate a unique ID for the NFC card or use the provided one
+            if is_nfc:
+                if nfc_card_id:
+                    secure_key = nfc_card_id
+                    card_id = f"NFC{nfc_card_id[-8:].upper()}"
+                else:
+                    card_id = f"NFC{uuid.uuid4().hex[:8].upper()}"
+                    secure_key = uuid.uuid4().hex
             else:
-                # Generate a unique card ID and secure key
                 card_id = f"CARD{uuid.uuid4().hex[:8].upper()}"
                 secure_key = uuid.uuid4().hex
             
@@ -80,7 +84,8 @@ class CardViewSet(viewsets.ModelViewSet):
                 balance=initial_balance,
                 customer_name=customer_name,
                 customer_mobile=customer_mobile,
-                active=True
+                active=True,
+                is_nfc=is_nfc
             )
             
             # Create a top-up transaction if initial balance > 0
@@ -99,6 +104,62 @@ class CardViewSet(viewsets.ModelViewSet):
                 'message': 'Card issued successfully'
             }, status=status.HTTP_201_CREATED)
             
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def check(self, request):
+        """Check if a card exists"""
+        card_id = request.query_params.get('card_id', '')
+        if not card_id:
+            return Response({
+                'success': False,
+                'error': 'Card ID is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        card_exists = Card.objects.filter(card_id=card_id).exists()
+        return Response({
+            'success': True,
+            'exists': card_exists
+        })
+
+    @action(detail=False, methods=['post'])
+    def process(self, request):
+        """Process a card (NFC or manual)"""
+        try:
+            card_id = request.data.get('card_id')
+            is_nfc = request.data.get('isNFC', False)
+            
+            if not card_id:
+                return Response({
+                    'success': False,
+                    'error': 'Card ID is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            card, created = Card.objects.get_or_create(
+                card_id=card_id,
+                defaults={
+                    'secure_key': uuid.uuid4().hex,
+                    'is_nfc': is_nfc,
+                    'active': True
+                }
+            )
+            
+            if created:
+                message = 'New card created and processed successfully'
+            else:
+                message = 'Existing card processed successfully'
+            
+            return Response({
+                'success': True,
+                'card_id': card.card_id,
+                'is_new': created,
+                'message': message
+            })
+        
         except Exception as e:
             return Response({
                 'success': False,

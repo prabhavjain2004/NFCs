@@ -67,6 +67,7 @@ class Card(models.Model):
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used = models.DateTimeField(blank=True, null=True)
+    is_nfc = models.BooleanField(default=False)
     
     def __str__(self):
         return self.card_id

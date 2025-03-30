@@ -1,11 +1,18 @@
-// Card ID Handler - Manual entry replacement for NFC
+
+// Card ID Handler - Supports both NFC and manual entry
 class CardHandler {
     constructor() {
         this.encryptionKey = null;
+        this.nfcHandler = new NFCHandler();
+        this.isNFCSupported = this.nfcHandler.checkNFCSupport();
     }
 
     async initialize() {
         await this.setupEncryption();
+        if (this.isNFCSupported) {
+            await this.nfcHandler.requestPermission();
+        }
+        this.setupNFCStatusDisplay();
     }
 
     async setupEncryption() {
@@ -40,18 +47,109 @@ class CardHandler {
         };
     }
 
-    async processCardId(cardId) {
+    async processCardId(cardId, isNFC = false) {
         try {
-            // Encrypt the data before sending
+            let uniqueId = cardId;
+            if (isNFC && !await this.checkIfCardExists(cardId)) {
+                uniqueId = this.nfcHandler.generateUniqueID();
+            }
+
             const encryptedData = await this.encryptData({
-                text: cardId,
+                text: uniqueId,
                 timestamp: Date.now(),
-                deviceId: await this.getDeviceIdentifier()
+                deviceId: await this.getDeviceIdentifier(),
+                isNFC: isNFC
             });
             
-            return [encryptedData];
+            const response = await this.sendCardData(encryptedData);
+            this.showStatus('Card processed successfully', 'success');
+            return response;
         } catch (error) {
             console.error("Error processing card data:", error);
+            this.showStatus(`Error: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+
+    async checkIfCardExists(cardId) {
+        // Implement API call to check if the card exists in the backend
+        try {
+            const response = await axios.get(`/api/cards/check/${cardId}/`);
+            return response.data.exists;
+        } catch (error) {
+            console.error("Error checking card existence:", error);
+            return false;
+        }
+    }
+
+    async sendCardData(encryptedData) {
+        // Implement API call to send card data to the backend
+        try {
+            const response = await axios.post('/api/cards/process/', encryptedData, authManager.getAuthHeaders());
+            return response.data;
+        } catch (error) {
+            console.error("Error sending card data:", error);
+            throw error;
+        }
+    }
+
+    showStatus(message, type) {
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        const statusElement = document.getElementById('cardStatus');
+        if (statusElement) {
+            statusElement.textContent = message;
+            statusElement.className = `text-${type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue'}-600`;
+        }
+    }
+
+    setupNFCStatusDisplay() {
+        const nfcStatusElement = document.getElementById('nfcStatus');
+        if (nfcStatusElement) {
+            nfcStatusElement.textContent = this.isNFCSupported ? 'NFC Supported' : 'NFC Not Supported';
+            nfcStatusElement.className = `text-${this.isNFCSupported ? 'green' : 'red'}-600`;
+        }
+    }
+
+    startNFCReading() {
+        if (!this.isNFCSupported) {
+            this.showStatus('NFC is not supported on this device', 'warning');
+            return;
+        }
+        this.showStatus('Waiting for NFC card...', 'info');
+        this.nfcHandler.startReading('cardReading', (cardId, ndefMessage, error) => {
+            if (error) {
+                this.showStatus(`NFC Error: ${error.message}`, 'error');
+            } else {
+                this.showStatus('NFC Card detected!', 'success');
+                this.processCardId(cardId, ndefMessage, true);
+            }
+        });
+    }
+
+    async processCardId(cardId, ndefMessage, isNFC = false) {
+        try {
+            let uniqueId = cardId;
+            if (isNFC) {
+                if (ndefMessage && ndefMessage.length === 16) {
+                    uniqueId = ndefMessage;
+                } else if (!await this.checkIfCardExists(cardId)) {
+                    uniqueId = this.nfcHandler.generateUniqueID();
+                }
+            }
+
+            const encryptedData = await this.encryptData({
+                text: uniqueId,
+                timestamp: Date.now(),
+                deviceId: await this.getDeviceIdentifier(),
+                isNFC: isNFC
+            });
+            
+            const response = await this.sendCardData(encryptedData);
+            this.showStatus('Card processed successfully', 'success');
+            return response;
+        } catch (error) {
+            console.error("Error processing card data:", error);
+            this.showStatus(`Error: ${error.message}`, 'error');
             throw error;
         }
     }
@@ -243,7 +341,13 @@ const rateLimiter = new RateLimiter(60, 60000); // 60 requests per minute
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the card handler
-    cardHandler.initialize().catch(error => {
+    cardHandler.initialize().then(() => {
+        console.log('Card handler initialized successfully');
+        // Start NFC reading if supported
+        if (cardHandler.isNFCSupported) {
+            cardHandler.startNFCReading();
+        }
+    }).catch(error => {
         console.error('Failed to initialize card handler:', error);
     });
     const loginBtn = document.getElementById('loginBtn');
