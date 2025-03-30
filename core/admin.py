@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
-from .models import User, Outlet, Card, Transaction, Settlement
+from .models import User, Outlet, Card, Transaction
 
 class CustomUserCreationForm(UserCreationForm):
     name = forms.CharField(max_length=100, required=False)
@@ -69,9 +69,3 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('transaction_type', 'secure_key', 'amount', 'timestamp', 'outlet')
     list_filter = ('transaction_type', 'timestamp')
     search_fields = ('secure_key', 'outlet__name')
-
-@admin.register(Settlement)
-class SettlementAdmin(admin.ModelAdmin):
-    list_display = ('outlet', 'amount', 'timestamp', 'status')
-    list_filter = ('status', 'timestamp')
-    search_fields = ('outlet__name',)

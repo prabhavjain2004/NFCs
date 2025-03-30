@@ -26,7 +26,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers
-handler400 = 'core.views.bad_request'
-handler403 = 'core.views.permission_denied'
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.server_error'
+handler400 = 'core.error_handlers.bad_request'
+handler403 = 'core.error_handlers.permission_denied'
+handler404 = 'core.error_handlers.page_not_found'
+handler500 = 'core.error_handlers.server_error'

@@ -1,95 +1,117 @@
-from .error_handlers import (
-    bad_request,
-    permission_denied,
-    page_not_found,
-    server_error
-)
-
-from .page_views import (
-    home,
-    profile,
-    privacy,
-    terms,
-    password_reset,
-    transactions,
-    outlet_dashboard,
-    admin_dashboard,
-    card_management,
-    outlet_transactions,
-    admin_users,
-    admin_settlements,
-    outlet_settlements
-)
-
-from .api_views import (
-    request_password_reset,
-    reset_password,
-    UserViewSet,
-    OutletViewSet,
-    CardViewSet,
-    TransactionViewSet,
-    SettlementViewSet,
-    AdminDashboardViewSet
-)
-
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, Count
+from django.utils import timezone
+from django.http import HttpResponse
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from datetime import timedelta
 
-# Export all views
-__all__ = [
-    # Error Handlers
-    'bad_request',
-    'permission_denied',
-    'page_not_found',
-    'server_error',
-    
-    # Page Views
-    'home',
-    'profile',
-    'privacy',
-    'terms',
-    'password_reset',
-    'transactions',
-    'outlet_dashboard',
-    'admin_dashboard',
-    'card_management',
-    'outlet_transactions',
-    'admin_users',
-    'admin_settlements',
-    'outlet_settlements',
-    
-    # API Views
-    'request_password_reset',
-    'reset_password',
-    'UserViewSet',
-    'OutletViewSet',
-    'CardViewSet',
-    'TransactionViewSet',
-    'SettlementViewSet',
-    'AdminDashboardViewSet'
-]
+from .models import User, Outlet, Card, Transaction, OutletSummary
 
 def home(request):
+    """Home page view"""
+    # If user is logged in, redirect to appropriate dashboard
+    if request.user.is_authenticated:
+        if request.user.user_type == 'admin':
+            return redirect('admin-dashboard')
+        elif request.user.user_type == 'outlet':
+            return redirect('outlet-dashboard')
+    
     return render(request, 'core/home.html')
 
-def admin_users(request):
-    users = get_user_model().objects.all()
-    return render(request, 'core/admin_users.html', {'users': users})
+@login_required
+def transactions(request):
+    """View for all transactions (admin view)"""
+    if request.user.user_type != 'admin':
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    transactions = Transaction.objects.all().order_by('-timestamp')
+    
+    context = {
+        'transactions': transactions
+    }
+    
+    return render(request, 'core/transactions.html', context)
 
-def admin_settlements(request):
-    # Add your logic here
-    return render(request, 'core/admin_settlements.html')
+@login_required
+def outlet_transactions(request):
+    """View for outlet-specific transactions"""
+    if request.user.user_type != 'outlet' or not hasattr(request.user, 'outlet'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    transactions = Transaction.objects.filter(outlet=request.user.outlet).order_by('-timestamp')
+    
+    context = {
+        'transactions': transactions
+    }
+    
+    return render(request, 'core/transactions.html', context)
 
-def about(request):
-    return render(request, 'core/about.html')
+@login_required
+def admin_dashboard(request):
+    """Admin dashboard view"""
+    if request.user.user_type != 'admin':
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    # Get statistics for dashboard
+    stats = {
+        'total_cards': Card.objects.count(),
+        'active_outlets': Outlet.objects.filter(active=True).count(),
+        'total_transactions': Transaction.objects.count(),
+        'total_revenue': Transaction.objects.filter(transaction_type='payment', status='completed').aggregate(Sum('amount'))['amount__sum'] or 0
+    }
+    
+    # Get outlets with their summaries
+    outlets = Outlet.objects.all()
+    
+    # Ensure all outlets have summaries
+    for outlet in outlets:
+        summary, created = OutletSummary.objects.get_or_create(outlet=outlet)
+        if created or (timezone.now() - summary.last_updated) > timedelta(hours=1):
+            summary.update_summary()
+    
+    context = {
+        'stats': stats,
+        'outlets': outlets
+    }
+    
+    return render(request, 'core/dashboard/admin_dashboard.html', context)
 
-def contact(request):
-    return render(request, 'core/contact.html')
+@login_required
+def outlet_dashboard(request):
+    """Outlet dashboard view"""
+    if request.user.user_type != 'outlet' or not hasattr(request.user, 'outlet'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    outlet = request.user.outlet
+    
+    # Get or create outlet summary
+    summary, created = OutletSummary.objects.get_or_create(outlet=outlet)
+    if created or (timezone.now() - summary.last_updated) > timedelta(hours=1):
+        summary.update_summary()
+    
+    # Get recent transactions
+    recent_transactions = Transaction.objects.filter(outlet=outlet).order_by('-timestamp')[:10]
+    
+    context = {
+        'outlet': outlet,
+        'summary': summary,
+        'recent_transactions': recent_transactions
+    }
+    
+    return render(request, 'core/dashboard/outlet_dashboard.html', context)
 
-def faq(request):
-    return render(request, 'core/faq.html')
-
-def help(request):
-    return render(request, 'core/help.html')
+@login_required
+def card_management(request):
+    """Card management view for admins"""
+    if request.user.user_type != 'admin':
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('home')
+    
+    context = {}
+    
+    return render(request, 'core/card_management.html', context)

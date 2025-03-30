@@ -39,15 +39,10 @@
                         {% if user.user_type == 'admin' %}
                             <a href="{% url 'admin-dashboard' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
                             <a href="{% url 'card-management' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Card Management</a>
-                            <a href="{% url 'admin-users' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Users</a>
-                            <a href="{% url 'admin-settlements' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
+                            <a href="#" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Users</a>
                         {% elif user.user_type == 'outlet' %}
                             <a href="{% url 'outlet-dashboard' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
                             <a href="{% url 'outlet-transactions' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Transactions</a>
-                            <a href="{% url 'outlet-settlements' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Settlements</a>
-                        {% else %}
-                            <a href="{% url 'customer-dashboard' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-                            <a href="{% url 'customer-transactions' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Transactions</a>
                         {% endif %}
 
                         <!-- User Dropdown -->
@@ -58,18 +53,21 @@
                                 <i class="fas fa-chevron-down ml-2"></i>
                             </button>
                             <div class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5" id="user-menu">
-                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                <span class="block px-4 py-2 text-sm text-gray-700">My Account</span>
                                 <div class="border-t border-gray-100"></div>
-                                <button id="logoutBtn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                                <form action="{% url 'logout' %}" method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                                </form>
                             </div>
                         </div>
                     {% else %}
                         <button id="loginBtn" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                             <i class="fas fa-sign-in-alt mr-2"></i>Login
                         </button>
-                        <a href="{% url 'register' %}" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                            <i class="fas fa-user-plus mr-2"></i>Register
-                        </a>
+                        <span class="text-gray-300 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-info-circle mr-2"></i>Contact Admin
+                        </span>
                     {% endif %}
                 </div>
             </div>
@@ -81,21 +79,19 @@
                         {% if user.user_type == 'admin' %}
                             <a href="{% url 'admin-dashboard' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
                             <a href="{% url 'card-management' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Card Management</a>
-                            <a href="{% url 'admin-users' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Users</a>
-                            <a href="{% url 'admin-settlements' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Settlements</a>
+                            <a href="#" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Users</a>
                         {% elif user.user_type == 'outlet' %}
                             <a href="{% url 'outlet-dashboard' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
                             <a href="{% url 'outlet-transactions' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Transactions</a>
-                            <a href="{% url 'outlet-settlements' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Settlements</a>
-                        {% else %}
-                            <a href="{% url 'customer-dashboard' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Dashboard</a>
-                            <a href="{% url 'customer-transactions' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Transactions</a>
                         {% endif %}
-                        <a href="{% url 'profile' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Profile</a>
-                        <button id="mobileLogoutBtn" class="w-full text-left text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Logout</button>
+                        <span class="block text-gray-300 px-3 py-2 rounded-md text-base font-medium">My Account</span>
+                        <form action="{% url 'logout' %}" method="post" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Logout</button>
+                        </form>
                     {% else %}
                         <button id="mobileLoginBtn" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Login</button>
-                        <a href="{% url 'register' %}" class="block text-gray-300 hover:text-white px-3 py-2 rounded-md text-base font-medium">Register</a>
+                        <span class="block text-gray-300 px-3 py-2 rounded-md text-base font-medium">Contact Admin</span>
                     {% endif %}
                 </div>
             </div>
@@ -128,8 +124,7 @@
                     <p>&copy; 2025 NFC Payment System. All Rights Reserved.</p>
                 </div>
                 <div class="mt-4 md:mt-0 text-center md:text-right">
-                    <a href="{% url 'privacy' %}" class="text-gray-300 hover:text-white mx-3">Privacy Policy</a>
-                    <a href="{% url 'terms' %}" class="text-gray-300 hover:text-white">Terms of Service</a>
+                    <span class="text-gray-300">NFC Payment System</span>
                 </div>
             </div>
         </div>
@@ -163,7 +158,7 @@
                     </button>
                 </form>
                 <div class="text-center mt-4">
-                    <a href="{% url 'password-reset' %}" class="text-sm text-blue-600 hover:text-blue-500">Forgot password?</a>
+                    <span class="text-sm text-gray-500">Forgot password? Contact administrator.</span>
                 </div>
             </div>
         </div>
@@ -187,41 +182,52 @@
     {% block extra_scripts %}{% endblock %}
 
     <script>
-        // Mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
 
-        // User dropdown toggle
-        const userMenuButton = document.getElementById('user-menu-button');
-        const userMenu = document.getElementById('user-menu');
-        if (userMenuButton) {
-            userMenuButton.addEventListener('click', () => {
-                userMenu.classList.toggle('hidden');
-            });
-        }
+            // User dropdown toggle
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', () => {
+                    userMenu.classList.toggle('hidden');
+                });
+            }
 
-        // Modal functionality
-        const loginModal = document.getElementById('loginModal');
-        const loginBtn = document.getElementById('loginBtn');
-        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
-        const closeModalBtns = document.querySelectorAll('[data-dismiss="modal"]');
+            // Modal functionality
+            const loginModal = document.getElementById('loginModal');
+            const loginBtn = document.getElementById('loginBtn');
+            const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+            const closeModalBtns = document.querySelectorAll('[data-dismiss="modal"]');
 
-        function toggleModal() {
-            loginModal.classList.toggle('hidden');
-        }
+            function toggleModal() {
+                if (loginModal) {
+                    loginModal.classList.toggle('hidden');
+                }
+            }
 
-        if (loginBtn) loginBtn.addEventListener('click', toggleModal);
-        if (mobileLoginBtn) mobileLoginBtn.addEventListener('click', toggleModal);
-        closeModalBtns.forEach(btn => btn.addEventListener('click', toggleModal));
+            if (loginBtn) loginBtn.addEventListener('click', toggleModal);
+            if (mobileLoginBtn) mobileLoginBtn.addEventListener('click', toggleModal);
+            if (closeModalBtns) {
+                closeModalBtns.forEach(btn => btn.addEventListener('click', toggleModal));
+            }
 
-        // Close alert messages
-        document.querySelectorAll('[data-dismiss="alert"]').forEach(button => {
-            button.addEventListener('click', () => {
-                button.parentElement.remove();
-            });
+            // Close alert messages
+            const alertButtons = document.querySelectorAll('[data-dismiss="alert"]');
+            if (alertButtons) {
+                alertButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        button.parentElement.remove();
+                    });
+                });
+            }
         });
     </script>
 </body>

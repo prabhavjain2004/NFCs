@@ -1,277 +1,253 @@
-from django.contrib.auth import authenticate
-from rest_framework import status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Outlet, Card, Transaction, Settlement
-from django.db.models import Sum, Count
-from decimal import Decimal
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from datetime import timedelta
+from django.db.models import Sum
 import uuid
-from django.db import transaction
+import csv
+from django.http import HttpResponse
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def request_password_reset(request):
-    email = request.data.get('email')
-    try:
-        user = User.objects.get(email=email)
-        token = str(uuid.uuid4())
-        user.password_reset_token = token
-        user.password_reset_expires = timezone.now() + timedelta(hours=24)
-        user.save()
-        
-        # TODO: Send email with reset link
-        return Response({'message': 'Password reset instructions sent to your email'})
-    except User.DoesNotExist:
-        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+from .models import User, Outlet, Card, Transaction, OutletSummary
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def reset_password(request):
-    token = request.data.get('token')
-    new_password = request.data.get('new_password')
-    
-    try:
-        user = User.objects.get(
-            password_reset_token=token,
-            password_reset_expires__gt=timezone.now()
-        )
-        user.set_password(new_password)
-        user.password_reset_token = None
-        user.password_reset_expires = None
-        user.save()
-        return Response({'message': 'Password reset successful'})
-    except User.DoesNotExist:
-        return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
-
+# ViewSets for API endpoints
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = [IsAdminUser]
-
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
-    def login(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user_type': user.user_type
-            })
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def update_profile(self, request):
-        user = request.user
-        try:
-            if user.user_type == 'customer':
-                user.first_name = request.data.get('first_name', user.first_name)
-                user.last_name = request.data.get('last_name', user.last_name)
-                user.email = request.data.get('email', user.email)
-                user.phone = request.data.get('phone', user.phone)
-            elif user.user_type == 'outlet':
-                outlet = user.outlet
-                outlet.name = request.data.get('outlet_name', outlet.name)
-                outlet.address = request.data.get('address', outlet.address)
-                outlet.save()
-            
-            user.save()
-            return Response({'message': 'Profile updated successfully'})
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def change_password(self, request):
-        user = request.user
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
-        
-        if not user.check_password(current_password):
-            return Response({'error': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user.set_password(new_password)
-        user.save()
-        return Response({'message': 'Password changed successfully'})
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Admin can see all users, outlets can only see themselves
+        if self.request.user.user_type == 'admin':
+            return User.objects.all()
+        return User.objects.filter(id=self.request.user.id)
 
 class OutletViewSet(viewsets.ModelViewSet):
     queryset = Outlet.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def summary(self, request):
-        outlet = request.user.outlet
-        today = timezone.now().date()
-        
-        today_transactions = Transaction.objects.filter(
-            outlet=outlet,
-            timestamp__date=today
-        )
-        
-        return Response({
-            'today_transactions': today_transactions.count(),
-            'today_revenue': today_transactions.aggregate(Sum('amount'))['amount__sum'] or 0,
-            'pending_settlement': today_transactions.filter(settled=False).aggregate(Sum('amount'))['amount__sum'] or 0
-        })
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Admin can see all outlets, outlets can only see themselves
+        if self.request.user.user_type == 'admin':
+            return Outlet.objects.all()
+        if hasattr(self.request.user, 'outlet'):
+            return Outlet.objects.filter(id=self.request.user.outlet.id)
+        return Outlet.objects.none()
 
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
-    def recharge(self, request, pk=None):
-        card = self.get_object()
-        amount = Decimal(request.data.get('amount', 0))
-        if amount <= 0:
-            return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
-        card.balance += amount
-        card.save()
-        Transaction.objects.create(
-            transaction_type='recharge',
-            secure_key=card.secure_key,
-            amount=amount
-        )
-        return Response({'message': 'Recharge successful', 'new_balance': card.balance})
-
-    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @action(detail=False, methods=['post'])
     def issue(self, request):
-        initial_balance = Decimal(request.data.get('initial_balance', 0))
-        secure_key = str(uuid.uuid4().hex)[:16]
-        card_id = str(uuid.uuid4().hex)[:8].upper()
-        customer_name = request.data.get('customer_name')
-        customer_mobile = request.data.get('customer_mobile')
-        user_id = request.data.get('user_id')
-        
+        """Issue a new NFC card"""
         try:
-            user = User.objects.get(id=user_id)
+            # Generate a unique card ID and secure key
+            card_id = f"CARD{uuid.uuid4().hex[:8].upper()}"
+            secure_key = uuid.uuid4().hex
+            
+            # Get data from request
+            initial_balance = request.data.get('initial_balance', 0)
+            customer_name = request.data.get('customer_name', '')
+            customer_mobile = request.data.get('customer_mobile', '')
+            
+            # Create the card
             card = Card.objects.create(
                 card_id=card_id,
                 secure_key=secure_key,
                 balance=initial_balance,
-                active=True,
                 customer_name=customer_name,
                 customer_mobile=customer_mobile,
-                user=user
+                active=True
+            )
+            
+            # Create a top-up transaction if initial balance > 0
+            if float(initial_balance) > 0:
+                Transaction.objects.create(
+                    transaction_type='topup',
+                    secure_key=secure_key,
+                    amount=initial_balance,
+                    status='completed',
+                    description=f"Initial top-up for card {card_id}"
+                )
+            
+            return Response({
+                'success': True,
+                'card_id': card_id,
+                'message': 'Card issued successfully'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['post'])
+    def topup(self, request, pk=None):
+        """Top up a card's balance"""
+        try:
+            card = self.get_object()
+            amount = float(request.data.get('amount', 0))
+            
+            if amount <= 0:
+                return Response({
+                    'success': False,
+                    'error': 'Amount must be greater than zero'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Update card balance
+            card.balance += amount
+            card.last_used = timezone.now()
+            card.save()
+            
+            # Create transaction record
+            transaction = Transaction.objects.create(
+                transaction_type='topup',
+                secure_key=card.secure_key,
+                amount=amount,
+                status='completed',
+                description=f"Top-up for card {card.card_id}"
             )
             
             return Response({
-                'message': 'Card issued successfully',
-                'card_id': card.id,
-                'secure_key': secure_key
+                'success': True,
+                'transaction_id': transaction.transaction_id,
+                'new_balance': card.balance,
+                'message': 'Top-up successful'
             })
+            
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def history(self, request):
-        transactions = Transaction.objects.filter(outlet=request.user.outlet)
-        return Response(self.get_serializer(transactions, many=True).data)
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-    def make_payment(self, request):
-        secure_key = request.data.get('secure_key')
-        amount = Decimal(request.data.get('amount', 0))
-        outlet_id = request.data.get('outlet_id')
-
+    queryset = Transaction.objects.all().order_by('-timestamp')
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Filter transactions based on user type
+        if self.request.user.user_type == 'admin':
+            return Transaction.objects.all().order_by('-timestamp')
+        elif self.request.user.user_type == 'outlet' and hasattr(self.request.user, 'outlet'):
+            return Transaction.objects.filter(outlet=self.request.user.outlet).order_by('-timestamp')
+        return Transaction.objects.none()
+    
+    @action(detail=False, methods=['post'])
+    def payment(self, request):
+        """Process a payment transaction"""
         try:
-            card = Card.objects.get(secure_key=secure_key)
-            outlet = Outlet.objects.get(id=outlet_id)
-        except (Card.DoesNotExist, Outlet.DoesNotExist):
-            return Response({'error': 'Invalid card or outlet'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if amount <= 0 or card.balance < amount:
-            return Response({'error': 'Invalid amount or insufficient balance'}, status=status.HTTP_400_BAD_REQUEST)
-
-        card.balance -= amount
-        card.save()
-
-        Transaction.objects.create(
-            transaction_type='payment',
-            secure_key=secure_key,
-            amount=amount,
-            outlet=outlet
-        )
-
-        return Response({'message': 'Payment successful', 'new_balance': card.balance})
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
-    def history(self, request):
-        user = request.user
-        if user.user_type == 'customer':
-            transactions = Transaction.objects.filter(secure_key__in=user.cards.values_list('secure_key', flat=True))
-        elif user.user_type == 'outlet':
-            transactions = Transaction.objects.filter(outlet=user.outlet)
-        else:
-            transactions = Transaction.objects.all()
-
-        return Response(self.get_serializer(transactions, many=True).data)
-
-    @action(detail=False, methods=['get'])
-    def realtime(self, request):
-        last_hour = timezone.now() - timedelta(hours=1)
-        transactions = Transaction.objects.filter(
-            timestamp__gte=last_hour
-        ).order_by('-timestamp')
-        return Response(self.get_serializer(transactions, many=True).data)
-
-class SettlementViewSet(viewsets.ModelViewSet):
-    queryset = Settlement.objects.all()
-    permission_classes = [IsAdminUser]
-
-    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
-    def settle_outlet(self, request):
-        outlet_id = request.data.get('outlet_id')
-        try:
-            outlet = Outlet.objects.get(id=outlet_id)
-        except Outlet.DoesNotExist:
-            return Response({'error': 'Invalid outlet'}, status=status.HTTP_400_BAD_REQUEST)
-
-        total_amount = Transaction.objects.filter(outlet=outlet, transaction_type='payment').aggregate(Sum('amount'))['amount__sum'] or 0
-        
-        if total_amount > 0:
-            settlement = Settlement.objects.create(
+            # Get data from request
+            secure_key = request.data.get('secure_key')
+            amount = float(request.data.get('amount', 0))
+            
+            # Validate data
+            if not secure_key:
+                return Response({
+                    'success': False,
+                    'error': 'Card secure key is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+            if amount <= 0:
+                return Response({
+                    'success': False,
+                    'error': 'Amount must be greater than zero'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the card
+            try:
+                card = Card.objects.get(secure_key=secure_key)
+            except Card.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid card'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Check if card is active
+            if not card.active:
+                return Response({
+                    'success': False,
+                    'error': 'Card is inactive'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if card has sufficient balance
+            if card.balance < amount:
+                return Response({
+                    'success': False,
+                    'error': 'Insufficient balance'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get the outlet (if outlet user)
+            outlet = None
+            if self.request.user.user_type == 'outlet' and hasattr(self.request.user, 'outlet'):
+                outlet = self.request.user.outlet
+            
+            # Create transaction
+            transaction = Transaction.objects.create(
+                transaction_type='payment',
+                secure_key=secure_key,
+                amount=amount,
                 outlet=outlet,
-                amount=total_amount,
-                status='completed'
+                status='completed',
+                description=request.data.get('description', 'Payment transaction')
             )
-            return Response({'message': 'Settlement completed', 'amount': total_amount, 'settlement_id': settlement.id})
-        else:
-            return Response({'message': 'No transactions to settle'})
-
-class AdminDashboardViewSet(viewsets.ViewSet):
-    permission_classes = [IsAdminUser]
-
-    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
-    def system_analytics(self, request):
-        total_users = User.objects.count()
-        total_outlets = Outlet.objects.count()
-        total_cards = Card.objects.count()
-        total_transactions = Transaction.objects.count()
-        total_transaction_amount = Transaction.objects.aggregate(Sum('amount'))['amount__sum'] or 0
-
-        # Daily transaction trends
-        today = timezone.now().date()
-        last_week = today - timedelta(days=7)
-        daily_transactions = Transaction.objects.filter(
-            timestamp__date__gte=last_week
-        ).values('timestamp__date').annotate(
-            count=Count('id'),
-            total=Sum('amount')
-        ).order_by('timestamp__date')
-
-        return Response({
-            'total_users': total_users,
-            'total_outlets': total_outlets,
-            'total_cards': total_cards,
-            'total_transactions': total_transactions,
-            'total_transaction_amount': total_transaction_amount,
-            'daily_trends': daily_transactions
-        })
+            
+            # Update card balance
+            card.balance -= amount
+            card.last_used = timezone.now()
+            card.save()
+            
+            # Update outlet summary if applicable
+            if outlet:
+                summary, created = OutletSummary.objects.get_or_create(outlet=outlet)
+                summary.update_summary()
+            
+            return Response({
+                'success': True,
+                'transaction_id': transaction.transaction_id,
+                'new_balance': card.balance,
+                'message': 'Payment successful'
+            })
+            
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def export_csv(self, request):
+        """Export transactions as CSV"""
+        # Get transactions based on user type
+        transactions = self.get_queryset()
+        
+        # Create the HttpResponse with CSV header
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+        
+        # Create CSV writer
+        writer = csv.writer(response)
+        writer.writerow([
+            'Transaction ID', 
+            'Date & Time', 
+            'Type', 
+            'Amount', 
+            'Status', 
+            'Outlet', 
+            'Description'
+        ])
+        
+        # Add transaction data
+        for transaction in transactions:
+            writer.writerow([
+                transaction.transaction_id,
+                transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                transaction.get_transaction_type_display(),
+                transaction.amount,
+                transaction.get_status_display(),
+                transaction.outlet.name if transaction.outlet else 'N/A',
+                transaction.description or ''
+            ])
+        
+        return response

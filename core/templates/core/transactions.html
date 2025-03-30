@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
 
 {% block title %}Transactions - NFC Payment System{% endblock %}
@@ -6,97 +6,79 @@
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Transactions List -->
-        <div class="bg-white rounded-lg shadow-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-900">Transaction History</h2>
+        <!-- Transactions Header -->
+        <div class="bg-white rounded-lg shadow-lg mb-8">
+            <div class="px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Transaction History</h2>
+                    <p class="text-gray-600">View and manage your transaction records</p>
+                </div>
+                {% if user.user_type == 'admin' or user.user_type == 'outlet' %}
+                <div>
+                    <a href="{% url 'export_transactions' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Export CSV
+                    </a>
+                </div>
+                {% endif %}
             </div>
-            
-            <!-- Filters -->
-            <div class="p-6 border-b border-gray-200">
-                <form id="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-                        <select name="date_range" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                            <option value="7">Last 7 days</option>
-                            <option value="30">Last 30 days</option>
-                            <option value="90">Last 90 days</option>
-                            <option value="all">All time</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                        <select name="type" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                            <option value="all">All Types</option>
-                            <option value="payment">Payment</option>
-                            <option value="recharge">Recharge</option>
-                            <option value="refund">Refund</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select name="status" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                            <option value="all">All Status</option>
-                            <option value="completed">Completed</option>
-                            <option value="pending">Pending</option>
-                            <option value="failed">Failed</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            Apply Filters
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- Transactions Table -->
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date & Time
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Transaction ID
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Amount
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Description
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200" id="transactionsTable">
+                    <tbody class="bg-white divide-y divide-gray-200">
                         {% for transaction in transactions %}
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ transaction.created_at|date:"M d, Y H:i" }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if transaction.type == 'payment' %}bg-blue-100 text-blue-800
-                                    {% elif transaction.type == 'recharge' %}bg-green-100 text-green-800
-                                    {% else %}bg-purple-100 text-purple-800{% endif %}">
-                                    {{ transaction.type|title }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-                                {{ transaction.description }}
+                                {{ transaction.timestamp|date:"d M Y H:i" }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {% if transaction.type == 'payment' %}-{% endif %}
-                                ${{ transaction.amount|floatformat:2 }}
+                                {{ transaction.transaction_id }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if transaction.transaction_type == 'payment' %}bg-blue-100 text-blue-800
+                                    {% elif transaction.transaction_type == 'topup' %}bg-green-100 text-green-800
+                                    {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ₹{{ transaction.amount }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                                     {% if transaction.status == 'completed' %}bg-green-100 text-green-800
                                     {% elif transaction.status == 'pending' %}bg-yellow-100 text-yellow-800
                                     {% else %}bg-red-100 text-red-800{% endif %}">
-                                    {{ transaction.status|title }}
+                                    {{ transaction.get_status_display }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <button onclick="viewDetails('{{ transaction.id }}')" 
-                                        class="text-blue-600 hover:text-blue-800">
-                                    View Details
-                                </button>
+                                {{ transaction.description|default:"No description" }}
                             </td>
                         </tr>
                         {% empty %}
@@ -109,191 +91,7 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <div class="flex-1 flex justify-between sm:hidden">
-                    <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Previous
-                    </button>
-                    <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Next
-                    </button>
-                </div>
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">{{ total_transactions }}</span> results
-                        </p>
-                    </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                            <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Previous</span>
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                1
-                            </button>
-                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                2
-                            </button>
-                            <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                3
-                            </button>
-                            <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                <span class="sr-only">Next</span>
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </nav>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
-
-<!-- Transaction Details Modal -->
-<div id="transactionModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-    <div class="bg-white rounded-lg max-w-lg w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-gray-900">Transaction Details</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4" id="transactionDetails">
-                <!-- Details will be populated by JavaScript -->
-            </div>
-        </div>
-        <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
-            <button onclick="closeModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
-                Close
-            </button>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.getElementById('filterForm');
-    
-    filterForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        try {
-            const response = await axios.get('/api/transactions/', {
-                params: Object.fromEntries(formData)
-            });
-            updateTransactionsTable(response.data.transactions);
-        } catch (error) {
-            showAlert('Failed to fetch transactions', 'error');
-        }
-    });
-});
-
-function updateTransactionsTable(transactions) {
-    const table = document.getElementById('transactionsTable');
-    table.innerHTML = transactions.map(transaction => `
-        <tr>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ${new Date(transaction.created_at).toLocaleString()}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${transaction.type === 'payment' ? 'bg-blue-100 text-blue-800' :
-                    transaction.type === 'recharge' ? 'bg-green-100 text-green-800' :
-                    'bg-purple-100 text-purple-800'}">
-                    ${transaction.type}
-                </span>
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-900">${transaction.description}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ${transaction.type === 'payment' ? '-' : ''}$${transaction.amount.toFixed(2)}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
-                    transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'}">
-                    ${transaction.status}
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                <button onclick="viewDetails('${transaction.id}')" 
-                        class="text-blue-600 hover:text-blue-800">
-                    View Details
-                </button>
-            </td>
-        </tr>
-    `).join('') || `
-        <tr>
-            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                No transactions found
-            </td>
-        </tr>
-    `;
-}
-
-async function viewDetails(transactionId) {
-    try {
-        const response = await axios.get(`/api/transactions/${transactionId}/`);
-        const transaction = response.data;
-        
-        document.getElementById('transactionDetails').innerHTML = `
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Transaction ID</p>
-                    <p class="mt-1 text-sm text-gray-900">${transaction.id}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Date & Time</p>
-                    <p class="mt-1 text-sm text-gray-900">${new Date(transaction.created_at).toLocaleString()}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Type</p>
-                    <p class="mt-1 text-sm text-gray-900">${transaction.type}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Amount</p>
-                    <p class="mt-1 text-sm text-gray-900">$${transaction.amount.toFixed(2)}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Status</p>
-                    <p class="mt-1 text-sm text-gray-900">${transaction.status}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-500">Card Number</p>
-                    <p class="mt-1 text-sm text-gray-900">${transaction.card_number}</p>
-                </div>
-                <div class="col-span-2">
-                    <p class="text-sm font-medium text-gray-500">Description</p>
-                    <p class="mt-1 text-sm text-gray-900">${transaction.description}</p>
-                </div>
-            </div>
-        `;
-        
-        document.getElementById('transactionModal').classList.remove('hidden');
-    } catch (error) {
-        showAlert('Failed to fetch transaction details', 'error');
-    }
-}
-
-function closeModal() {
-    document.getElementById('transactionModal').classList.add('hidden');
-}
-
-function showAlert(message, type) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg ${
-        type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-    }`;
-    alertDiv.textContent = message;
-    document.body.appendChild(alertDiv);
-    setTimeout(() => alertDiv.remove(), 3000);
-}
-</script>
 {% endblock %}

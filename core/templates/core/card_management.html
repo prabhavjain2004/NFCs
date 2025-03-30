@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
 
 {% block title %}NFC Card Management - NFC Payment System{% endblock %}
@@ -10,19 +10,12 @@
         <div class="bg-white rounded-lg shadow-lg mb-8">
             <div class="px-6 py-4">
                 <h2 class="text-2xl font-bold text-gray-900">NFC Card Management</h2>
-                <p class="text-gray-600">Issue new cards and manage recharges securely</p>
+                <p class="text-gray-600">Issue new cards and manage top-ups</p>
             </div>
         </div>
 
-        <!-- Two-Step Process Info -->
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-8">
-            <h5 class="text-lg font-medium text-blue-800 mb-2">Two-Step Verification Process</h5>
-            <p class="text-blue-700 mb-2">For security purposes, all card operations require two NFC scans:</p>
-            <ul class="list-disc list-inside text-blue-700">
-                <li>First scan to identify the card</li>
-                <li>Second scan to confirm and complete the operation</li>
-            </ul>
-        </div>
+        <!-- Status Messages -->
+        <div id="operationStatus" class="hidden mb-6"></div>
 
         <!-- Main Operations -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -34,274 +27,73 @@
                 <div class="p-6">
                     <form id="issueCardForm" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Initial Balance (₹)</label>
+                            <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                            <input type="text" id="customerName" required
+                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="customerMobile" class="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+                            <input type="tel" id="customerMobile" required
+                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="initialBalance" class="block text-sm font-medium text-gray-700 mb-1">Initial Balance (₹)</label>
                             <input type="number" id="initialBalance" min="0" step="0.01" required
                                    class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div id="issueCardStatus" class="hidden"></div>
-                        <button type="submit" id="startIssueBtn"
+                        <input type="hidden" id="userId" value="{{ request.user.id }}">
+                        <button type="submit" id="issueCardBtn"
                                 class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            Start Card Issuance
+                            Issue Card
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Recharge Card -->
+            <!-- Top-up Card -->
             <div class="bg-white rounded-lg shadow-lg">
                 <div class="bg-green-600 px-6 py-4">
-                    <h5 class="text-lg font-semibold text-white">Recharge Card</h5>
+                    <h5 class="text-lg font-semibold text-white">Top-up Card</h5>
                 </div>
                 <div class="p-6">
-                    <form id="rechargeForm" class="space-y-4">
+                    <form id="topupForm" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Card Details</label>
-                            <div id="cardDetails" class="hidden bg-gray-50 rounded-lg p-4 space-y-2">
-                                <p><span class="font-medium">Card ID:</span> <span id="cardId">-</span></p>
-                                <p><span class="font-medium">Current Balance:</span> ₹<span id="currentBalance">0.00</span></p>
-                            </div>
+                            <label for="cardSelect" class="block text-sm font-medium text-gray-700 mb-1">Select Card</label>
+                            <select id="cardSelect" required
+                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                <option value="">Select a card</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Recharge Amount (₹)</label>
-                            <input type="number" id="rechargeAmount" min="1" step="0.01" required
+                            <label for="topupAmount" class="block text-sm font-medium text-gray-700 mb-1">Top-up Amount (₹)</label>
+                            <input type="number" id="topupAmount" min="1" step="0.01" required
                                    class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <div id="rechargeStatus" class="hidden"></div>
-                        <button type="submit" id="startRechargeBtn"
+                        <button type="submit" id="topupBtn"
                                 class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                            Start Recharge
+                            Top-up Card
                         </button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Operations -->
+        <!-- Card List -->
         <div class="bg-white rounded-lg shadow-lg">
             <div class="bg-gray-800 px-6 py-4">
-                <h5 class="text-lg font-semibold text-white">Recent Operations</h5>
+                <h5 class="text-lg font-semibold text-white">Issued Cards</h5>
             </div>
             <div class="p-6">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operation</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Card ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentOperations" class="bg-white divide-y divide-gray-200">
-                            <!-- Operations will be loaded dynamically -->
-                        </tbody>
-                    </table>
+                <div id="cardList" class="space-y-4">
+                    <!-- Cards will be loaded dynamically -->
+                    <p class="text-gray-500 text-center py-4">Loading cards...</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Processing Modal -->
-<div id="processingModal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-    <div class="bg-white rounded-lg max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-xl font-bold text-gray-900" id="processingTitle">Processing</h3>
-        </div>
-        <div class="p-6 text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-4"></div>
-            <p class="text-gray-700" id="processingMessage">Please wait...</p>
-        </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentOperation = null;
-    let firstScanComplete = false;
-    let cardData = null;
-
-    // Load recent operations
-    function loadRecentOperations() {
-        axios.get('/api/cards/operations/')
-            .then(response => {
-                const tbody = document.getElementById('recentOperations');
-                tbody.innerHTML = response.data.map(op => `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${new Date(op.timestamp).toLocaleString()}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${op.operation_type === 'issue' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
-                                ${op.operation_type}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${op.card_id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₹${op.amount}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${op.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                ${op.status}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('') || `
-                    <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                            No recent operations found
-                        </td>
-                    </tr>
-                `;
-            })
-            .catch(error => {
-                console.error('Error loading operations:', error);
-            });
-    }
-
-    // Show status alert
-    function showAlert(message, type) {
-        const statusDiv = document.getElementById(`${currentOperation}Status`);
-        statusDiv.className = `rounded-lg p-4 ${
-            type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`;
-        statusDiv.textContent = message;
-        statusDiv.classList.remove('hidden');
-    }
-
-    // Handle NFC operations
-    function startNFCOperation(operation) {
-        if (!('NDEFReader' in window)) {
-            showAlert('NFC is not supported on this device', 'error');
-            return;
-        }
-
-        currentOperation = operation;
-        firstScanComplete = false;
-        document.getElementById('processingModal').classList.remove('hidden');
-
-        const nfcReader = new NDEFReader();
-        nfcReader.scan()
-            .then(() => {
-                document.getElementById('processingMessage').textContent = 
-                    'Please tap the NFC card...';
-                
-                nfcReader.onreading = event => {
-                    handleNFCReading(event);
-                };
-            })
-            .catch(error => {
-                console.error('Error starting NFC scan:', error);
-                document.getElementById('processingModal').classList.add('hidden');
-                showAlert('Failed to start NFC scan', 'error');
-            });
-    }
-
-    // Handle NFC reading
-    function handleNFCReading(event) {
-        if (!firstScanComplete) {
-            // First scan
-            if (currentOperation === 'issue') {
-                const initialBalance = document.getElementById('initialBalance').value;
-
-                axios.post('/api/cards/issue/first-scan/', {
-                    nfc_data: event.message,
-                    initial_balance: initialBalance
-                })
-                .then(response => {
-                    cardData = response.data;
-                    firstScanComplete = true;
-                    document.getElementById('processingMessage').textContent = 
-                        'First scan complete. Please tap the card again to confirm...';
-                })
-                .catch(error => {
-                    console.error('Error in first scan:', error);
-                    document.getElementById('processingModal').classList.add('hidden');
-                    showAlert('Error during first scan', 'error');
-                });
-            } else {
-                // For recharge
-                axios.post('/api/cards/verify/', {
-                    nfc_data: event.message
-                })
-                .then(response => {
-                    cardData = response.data;
-                    document.getElementById('cardId').textContent = cardData.card_id;
-                    document.getElementById('currentBalance').textContent = cardData.balance;
-                    document.getElementById('cardDetails').classList.remove('hidden');
-                    document.getElementById('processingModal').classList.add('hidden');
-                    firstScanComplete = true;
-                })
-                .catch(error => {
-                    console.error('Error verifying card:', error);
-                    document.getElementById('processingModal').classList.add('hidden');
-                    showAlert('Error verifying card', 'error');
-                });
-            }
-        } else {
-            // Second scan
-            const endpoint = currentOperation === 'issue' ? 
-                '/api/cards/issue/confirm/' : '/api/cards/recharge/confirm/';
-            
-            const data = currentOperation === 'issue' ? 
-                { nfc_data: event.message, card_data: cardData } :
-                { 
-                    nfc_data: event.message, 
-                    card_id: cardData.card_id,
-                    amount: document.getElementById('rechargeAmount').value 
-                };
-
-            axios.post(endpoint, data)
-                .then(response => {
-                    document.getElementById('processingModal').classList.add('hidden');
-                    showAlert(
-                        `${currentOperation === 'issue' ? 'Card issued' : 'Recharge completed'} successfully`,
-                        'success'
-                    );
-                    loadRecentOperations();
-                    
-                    // Reset forms
-                    if (currentOperation === 'issue') {
-                        document.getElementById('issueCardForm').reset();
-                    } else {
-                        document.getElementById('rechargeForm').reset();
-                        document.getElementById('cardDetails').classList.add('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error in second scan:', error);
-                    document.getElementById('processingModal').classList.add('hidden');
-                    showAlert('Error completing operation', 'error');
-                });
-        }
-    }
-
-    // Event Listeners
-    document.getElementById('issueCardForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        startNFCOperation('issue');
-    });
-
-    document.getElementById('rechargeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (!firstScanComplete) {
-            startNFCOperation('recharge');
-        } else {
-            const amount = document.getElementById('rechargeAmount').value;
-            if (!amount || amount <= 0) {
-                showAlert('Please enter a valid amount', 'error');
-                return;
-            }
-            startNFCOperation('recharge');
-        }
-    });
-
-    // Initialize
-    loadRecentOperations();
-
-    // Refresh operations periodically
-    setInterval(loadRecentOperations, 30000);
-});
-</script>
+{% block extra_js %}
+<script src="{% static 'js/card-operations.js' %}"></script>
 {% endblock %}
