@@ -21,7 +21,35 @@ class NFCHandler {
             console.warn('Web NFC API is not supported in this browser');
             return false;
         }
+        
+        // Check if we're in a secure context (HTTPS or localhost)
+        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+            console.warn('Web NFC API requires HTTPS (except on localhost)');
+            return false;
+        }
+        
         return true;
+    }
+    
+    /**
+     * Request NFC permissions explicitly
+     * @returns {Promise<boolean>} Promise resolving to true if permission granted, false otherwise
+     */
+    async requestNFCPermission() {
+        if (!this.checkNFCSupport()) {
+            return false;
+        }
+        
+        try {
+            // Create a temporary NDEFReader to trigger the permission prompt
+            const tempReader = new NDEFReader();
+            await tempReader.scan();
+            console.log('NFC permission granted');
+            return true;
+        } catch (error) {
+            console.error('Error requesting NFC permission:', error);
+            return false;
+        }
     }
 
     /**
@@ -64,7 +92,7 @@ class NFCHandler {
      */
     async startReading(operation, callback) {
         if (!this.checkNFCSupport()) {
-            callback(null, new Error('NFC not supported'));
+            callback(null, new Error('NFC not supported in this browser or requires HTTPS'));
             return;
         }
 
@@ -80,28 +108,48 @@ class NFCHandler {
         try {
             this.showStatus('Waiting for NFC card...', 'info');
             
-            this.reader = new NDEFReader();
-            
-            // Handle reading errors
-            this.reader.addEventListener('error', (event) => {
-                this.showStatus(`NFC Error: ${event.message}`, 'error');
-                this.isReading = false;
-                if (this.operationCallback) {
-                    this.operationCallback(null, new Error(event.message));
+            // Check if NFC is enabled on the device
+            try {
+                this.reader = new NDEFReader();
+                
+                // Handle reading errors
+                this.reader.addEventListener('error', (event) => {
+                    console.error('NFC reading error:', event);
+                    this.showStatus(`NFC Error: ${event.message}`, 'error');
+                    this.isReading = false;
+                    if (this.operationCallback) {
+                        this.operationCallback(null, new Error(event.message));
+                    }
+                });
+
+                // Handle successful reading
+                this.reader.addEventListener('reading', ({ serialNumber }) => {
+                    console.log('NFC card detected:', serialNumber);
+                    this.handleCardRead(serialNumber);
+                });
+
+                // Start scanning - this will trigger the permission prompt if not already granted
+                await this.reader.scan();
+                this.showStatus('NFC reader activated. Please tap your card.', 'info');
+                
+            } catch (error) {
+                if (error.name === 'NotAllowedError') {
+                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
+                } else if (error.name === 'NotSupportedError') {
+                    this.showStatus('NFC is not supported or not enabled on this device.', 'error');
+                } else {
+                    this.showStatus(`Error starting NFC reader: ${error.message}`, 'error');
                 }
-            });
-
-            // Handle successful reading
-            this.reader.addEventListener('reading', ({ serialNumber }) => {
-                this.handleCardRead(serialNumber);
-            });
-
-            // Start scanning
-            await this.reader.scan();
-            this.showStatus('NFC reader activated. Please tap your card.', 'info');
+                console.error('Detailed NFC error:', error);
+                this.isReading = false;
+                if (callback) {
+                    callback(null, error);
+                }
+            }
             
         } catch (error) {
             this.showStatus(`Error starting NFC reader: ${error.message}`, 'error');
+            console.error('Detailed NFC error:', error);
             this.isReading = false;
             if (callback) {
                 callback(null, error);

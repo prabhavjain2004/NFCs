@@ -227,10 +227,65 @@
         const isNFCSupported = 'NDEFReader' in window;
         const operationStatus = document.getElementById('operationStatus');
         
-        if (!isNFCSupported && operationStatus) {
-            operationStatus.className = 'rounded-lg p-4 mb-6 bg-yellow-100 text-yellow-800';
-            operationStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> NFC is not supported in this browser. Manual card ID entry will be used instead.';
-            operationStatus.classList.remove('hidden');
+        // Create NFC permission request button
+        const nfcPermissionBtn = document.createElement('button');
+        nfcPermissionBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors mb-4';
+        nfcPermissionBtn.innerHTML = '<i class="fas fa-wifi mr-2"></i> Enable NFC Access';
+        
+        if (!isNFCSupported) {
+            // NFC not supported by browser
+            if (operationStatus) {
+                operationStatus.className = 'rounded-lg p-4 mb-6 bg-yellow-100 text-yellow-800';
+                operationStatus.innerHTML = `
+                    <div class="flex flex-col space-y-2">
+                        <div><i class="fas fa-exclamation-triangle mr-2"></i> <strong>NFC is not supported in this browser.</strong> Manual card ID entry will be used instead.</div>
+                        <div class="text-sm">
+                            <strong>Requirements for NFC:</strong>
+                            <ul class="list-disc ml-5 mt-1">
+                                <li>Chrome for Android (version 89+)</li>
+                                <li>HTTPS connection (except on localhost)</li>
+                                <li>NFC hardware enabled on your device</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                operationStatus.classList.remove('hidden');
+            }
+        } else if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+            // Not on HTTPS
+            if (operationStatus) {
+                operationStatus.className = 'rounded-lg p-4 mb-6 bg-yellow-100 text-yellow-800';
+                operationStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> <strong>NFC requires HTTPS.</strong> Please access this site via a secure connection.';
+                operationStatus.classList.remove('hidden');
+            }
+        } else {
+            // NFC supported, add permission button
+            if (operationStatus) {
+                operationStatus.className = 'rounded-lg p-4 mb-6 bg-blue-100 text-blue-800';
+                operationStatus.innerHTML = '<i class="fas fa-info-circle mr-2"></i> <strong>NFC is supported!</strong> Click the button below to enable NFC access.';
+                operationStatus.appendChild(nfcPermissionBtn);
+                operationStatus.classList.remove('hidden');
+                
+                // Add event listener to request NFC permission
+                nfcPermissionBtn.addEventListener('click', async function() {
+                    try {
+                        const nfcHandler = new NFCHandler();
+                        const permissionGranted = await nfcHandler.requestNFCPermission();
+                        
+                        if (permissionGranted) {
+                            operationStatus.className = 'rounded-lg p-4 mb-6 bg-green-100 text-green-800';
+                            operationStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i> <strong>NFC access enabled!</strong> You can now use NFC for card operations.';
+                        } else {
+                            operationStatus.className = 'rounded-lg p-4 mb-6 bg-red-100 text-red-800';
+                            operationStatus.innerHTML = '<i class="fas fa-times-circle mr-2"></i> <strong>NFC permission denied.</strong> Please check your device settings and try again.';
+                        }
+                    } catch (error) {
+                        console.error('Error requesting NFC permission:', error);
+                        operationStatus.className = 'rounded-lg p-4 mb-6 bg-red-100 text-red-800';
+                        operationStatus.innerHTML = `<i class="fas fa-times-circle mr-2"></i> <strong>Error enabling NFC:</strong> ${error.message}`;
+                    }
+                });
+            }
         }
     });
 </script>
