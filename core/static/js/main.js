@@ -1,18 +1,10 @@
-// NFC functionality with enhanced security
-class NFCHandler {
+// Card ID Handler - Manual entry replacement for NFC
+class CardHandler {
     constructor() {
-        this.reader = null;
-        this.isScanning = false;
         this.encryptionKey = null;
-        this.lastScanTime = 0;
-        this.scanInterval = 2000; // Minimum time between scans (2 seconds)
     }
 
     async initialize() {
-        if (!('NDEFReader' in window)) {
-            throw new Error('NFC functionality is not supported on this device.');
-        }
-        this.reader = new NDEFReader();
         await this.setupEncryption();
     }
 
@@ -48,62 +40,20 @@ class NFCHandler {
         };
     }
 
-    async startScan(onReading) {
-        if (this.isScanning) return;
-        
+    async processCardId(cardId) {
         try {
-            await this.initialize();
-            this.isScanning = true;
-
-            this.reader.onreadingerror = () => {
-                console.log("Error reading NFC tag.");
-            };
-
-            this.reader.onreading = async (event) => {
-                const currentTime = Date.now();
-                if (currentTime - this.lastScanTime < this.scanInterval) {
-                    console.log("Please wait before scanning again.");
-                    return;
-                }
-                this.lastScanTime = currentTime;
-
-                try {
-                    const data = await this.processNFCReading(event);
-                    if (onReading) onReading(data);
-                } catch (error) {
-                    console.error("Error processing NFC data:", error);
-                }
-            };
-
-            await this.reader.scan();
-            console.log("NFC scan started successfully.");
+            // Encrypt the data before sending
+            const encryptedData = await this.encryptData({
+                text: cardId,
+                timestamp: Date.now(),
+                deviceId: await this.getDeviceIdentifier()
+            });
+            
+            return [encryptedData];
         } catch (error) {
-            console.error(`Error starting NFC scan: ${error}`);
+            console.error("Error processing card data:", error);
             throw error;
         }
-    }
-
-    async processNFCReading(event) {
-        const records = event.message.records;
-        const processedData = [];
-
-        for (const record of records) {
-            if (record.recordType === "text") {
-                const textDecoder = new TextDecoder(record.encoding);
-                const text = textDecoder.decode(record.data);
-                
-                // Encrypt the data before sending
-                const encryptedData = await this.encryptData({
-                    text: text,
-                    timestamp: Date.now(),
-                    deviceId: await this.getDeviceIdentifier()
-                });
-                
-                processedData.push(encryptedData);
-            }
-        }
-
-        return processedData;
     }
 
     async getDeviceIdentifier() {
@@ -121,14 +71,6 @@ class NFCHandler {
         return Array.from(new Uint8Array(hash))
             .map(b => b.toString(16).padStart(2, '0'))
             .join('');
-    }
-
-    stopScan() {
-        this.isScanning = false;
-        if (this.reader) {
-            // Clean up resources
-            this.reader = null;
-        }
     }
 }
 
@@ -294,12 +236,16 @@ class RateLimiter {
 }
 
 // Initialize global instances
-const nfcHandler = new NFCHandler();
+const cardHandler = new CardHandler();
 const authManager = new AuthManager();
 const rateLimiter = new RateLimiter(60, 60000); // 60 requests per minute
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the card handler
+    cardHandler.initialize().catch(error => {
+        console.error('Failed to initialize card handler:', error);
+    });
     const loginBtn = document.getElementById('loginBtn');
     const loginForm = document.getElementById('loginForm');
 
@@ -342,6 +288,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Export modules for use in other scripts
-window.nfcHandler = nfcHandler;
+window.cardHandler = cardHandler;
 window.authManager = authManager;
 window.rateLimiter = rateLimiter;

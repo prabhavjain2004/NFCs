@@ -167,7 +167,7 @@
                     <div id="paymentStatus" class="hidden"></div>
                     <button type="submit" id="processPaymentBtn"
                             class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-wifi mr-2"></i> Scan NFC Card & Process Payment
+                        <i class="fas fa-credit-card mr-2"></i> Scan NFC Card & Process Payment
                     </button>
                 </form>
             </div>
@@ -177,5 +177,26 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/nfc-handler.js' %}"></script>
 <script src="{% static 'js/nfc-payment.js' %}"></script>
+
+<script>
+    // Check if NFC is supported and show appropriate message
+    document.addEventListener('DOMContentLoaded', function() {
+        const isNFCSupported = 'NDEFReader' in window;
+        const paymentStatus = document.getElementById('paymentStatus');
+        const processPaymentBtn = document.getElementById('processPaymentBtn');
+        
+        if (!isNFCSupported && paymentStatus) {
+            paymentStatus.className = 'rounded-lg p-4 mb-4 bg-yellow-100 text-yellow-800';
+            paymentStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> NFC is not supported in this browser. Manual card ID entry will be used instead.';
+            paymentStatus.classList.remove('hidden');
+            
+            // Update button text for manual entry
+            if (processPaymentBtn) {
+                processPaymentBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Enter Card ID & Process Payment';
+            }
+        }
+    });
+</script>
 {% endblock %}

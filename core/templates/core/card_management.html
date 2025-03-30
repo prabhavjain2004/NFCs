@@ -68,9 +68,9 @@
                 </div>
                 <div class="p-6">
                     <div id="issuanceStep1" class="space-y-4">
-                        <p class="text-gray-700 mb-4">Please tap or scan the new NFC card to retrieve its ID.</p>
+                        <p class="text-gray-700 mb-4">Please enter the card ID to register.</p>
                         <button type="button" id="scanNewCardBtn" class="w-full bg-blue-600 text-white px-4 py-4 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium">
-                            <i class="fas fa-wifi mr-2"></i> Scan NFC Card
+                            <i class="fas fa-credit-card mr-2"></i> Enter Card ID
                         </button>
                     </div>
                     <div id="issuanceStep2" class="space-y-4 hidden">
@@ -108,7 +108,7 @@
                             <input type="hidden" id="nfcCardId" value="">
                             
                             <div class="flex flex-col space-y-4">
-                                <p class="text-gray-700">Please tap the NFC card again to confirm and complete the card issuance.</p>
+                            <p class="text-gray-700">Please enter the card ID again to confirm and complete the card issuance.</p>
                                 <button type="button" id="confirmIssuanceBtn" class="w-full bg-green-600 text-white px-4 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium">
                                     <i class="fas fa-check-circle mr-2"></i> Confirm & Complete
                                 </button>
@@ -128,9 +128,9 @@
                 </div>
                 <div class="p-6">
                     <div id="topupStep1" class="space-y-4">
-                        <p class="text-gray-700 mb-4">Please tap or scan the NFC card to retrieve its ID.</p>
+                        <p class="text-gray-700 mb-4">Please enter the card ID to retrieve its information.</p>
                         <button type="button" id="scanTopupCardBtn" class="w-full bg-green-600 text-white px-4 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium">
-                            <i class="fas fa-wifi mr-2"></i> Scan NFC Card
+                            <i class="fas fa-credit-card mr-2"></i> Enter Card ID
                         </button>
                     </div>
                     <div id="topupStep2" class="space-y-4 hidden">
@@ -161,7 +161,7 @@
                                 <p id="selectedTopupAmount" class="mt-3 text-base font-medium text-blue-600">Selected: ₹0</p>
                             </div>
                             <div class="flex flex-col space-y-4">
-                                <p class="text-gray-700">Please tap the NFC card again to confirm and finalize the top-up.</p>
+                                <p class="text-gray-700">Please enter the card ID again to confirm and finalize the top-up.</p>
                                 <button type="button" id="confirmTopupBtn" class="w-full bg-green-600 text-white px-4 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium">
                                     <i class="fas fa-check-circle mr-2"></i> Confirm & Complete
                                 </button>
@@ -181,9 +181,9 @@
                 </div>
                 <div class="p-6">
                     <div class="space-y-4">
-                        <p class="text-gray-700 mb-4">Please tap or scan the NFC card to check its balance.</p>
+                        <p class="text-gray-700 mb-4">Please enter the card ID to check its balance.</p>
                         <button type="button" id="scanBalanceCardBtn" class="w-full bg-purple-600 text-white px-4 py-4 rounded-lg hover:bg-purple-700 transition-colors text-lg font-medium">
-                            <i class="fas fa-wifi mr-2"></i> Scan NFC Card
+                            <i class="fas fa-credit-card mr-2"></i> Enter Card ID
                         </button>
                         <div id="balanceResult" class="hidden mt-6 p-6 bg-gray-50 rounded-lg text-center">
                             <h3 class="text-xl font-bold text-gray-800 mb-2">Card Balance</h3>
@@ -218,5 +218,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/nfc-handler.js' %}"></script>
 <script src="{% static 'js/card-operations.js' %}"></script>
+
+<script>
+    // Check if NFC is supported and show appropriate message
+    document.addEventListener('DOMContentLoaded', function() {
+        const isNFCSupported = 'NDEFReader' in window;
+        const operationStatus = document.getElementById('operationStatus');
+        
+        if (!isNFCSupported && operationStatus) {
+            operationStatus.className = 'rounded-lg p-4 mb-6 bg-yellow-100 text-yellow-800';
+            operationStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> NFC is not supported in this browser. Manual card ID entry will be used instead.';
+            operationStatus.classList.remove('hidden');
+        }
+    });
+</script>
 {% endblock %}
