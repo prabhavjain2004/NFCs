@@ -51,8 +51,10 @@ class Outlet(models.Model):
     business_type = models.CharField(max_length=50, choices=BUSINESS_TYPES, null=True, blank=True)
     registration_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     is_verified = models.BooleanField(default=False)
-    verification_documents = models.JSONField(default=dict)
-    operating_hours = models.JSONField(default=dict)
+    verification_document_number = models.CharField(max_length=100, null=True, blank=True)
+    verification_document_type = models.CharField(max_length=50, null=True, blank=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
