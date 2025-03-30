@@ -97,18 +97,24 @@ class CardPaymentHandler {
             this.nfcHandler.startReading('payment', (cardId, error) => {
                 if (error) {
                     console.error('NFC reading error:', error);
-                    // Fall back to manual entry if there's an error
-                    this.fallbackToManualEntry(amount, description);
-                    return;
-                }
-                
-                if (!cardId) {
-                    this.showStatus('Failed to read NFC card', 'error');
+                    this.showStatus(`NFC Error: ${error.message}. Please try again.`, 'error');
                     this.isProcessing = false;
                     
                     // Reset payment button
                     if (paymentButton) {
-                        paymentButton.innerHTML = 'Process Payment';
+                        paymentButton.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Scan NFC Card & Process Payment';
+                        paymentButton.disabled = false;
+                    }
+                    return;
+                }
+                
+                if (!cardId) {
+                    this.showStatus('Failed to read NFC card. Please try again.', 'error');
+                    this.isProcessing = false;
+                    
+                    // Reset payment button
+                    if (paymentButton) {
+                        paymentButton.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Scan NFC Card & Process Payment';
                         paymentButton.disabled = false;
                     }
                     return;
@@ -118,30 +124,14 @@ class CardPaymentHandler {
                 this.processPaymentWithCardId(cardId, amount, description);
             });
         } else {
-            // Fall back to manual entry if NFC is not supported
-            this.fallbackToManualEntry(amount, description);
-        }
-    }
-    
-    /**
-     * Fall back to manual card ID entry
-     */
-    fallbackToManualEntry(amount, description) {
-        // Create a modal for card ID entry
-        const cardIdInput = prompt('Please enter the card ID:');
-        
-        // Reset payment button
-        const paymentButton = document.querySelector('#paymentForm button[type="submit"]');
-        if (paymentButton) {
-            paymentButton.innerHTML = 'Process Payment';
-            paymentButton.disabled = false;
-        }
-        
-        if (cardIdInput && cardIdInput.trim() !== '') {
-            this.processPaymentWithCardId(cardIdInput, amount, description);
-        } else {
-            this.showStatus('Payment cancelled', 'info');
+            this.showStatus('NFC is not supported in this browser or device. Please use a compatible device.', 'error');
             this.isProcessing = false;
+            
+            // Reset payment button
+            if (paymentButton) {
+                paymentButton.innerHTML = '<i class="fas fa-credit-card mr-2"></i> Scan NFC Card & Process Payment';
+                paymentButton.disabled = false;
+            }
         }
     }
     

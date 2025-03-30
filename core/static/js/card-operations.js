@@ -28,28 +28,42 @@ class CardOperationsHandler {
     }
 
     initialize() {
+        console.log('Initializing card operations handler');
+        
         // Card Issuance Button
         const cardIssuanceBtn = document.getElementById('cardIssuanceBtn');
         if (cardIssuanceBtn) {
-            cardIssuanceBtn.addEventListener('click', () => {
+            cardIssuanceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Card issuance button clicked');
                 this.showOperationForm('cardIssuance');
             });
+        } else {
+            console.error('Card issuance button not found');
         }
         
         // Top-up Button
         const topupCardBtn = document.getElementById('topupCardBtn');
         if (topupCardBtn) {
-            topupCardBtn.addEventListener('click', () => {
+            topupCardBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Top-up button clicked');
                 this.showOperationForm('topup');
             });
+        } else {
+            console.error('Top-up button not found');
         }
         
         // Balance Inquiry Button
         const balanceInquiryBtn = document.getElementById('balanceInquiryBtn');
         if (balanceInquiryBtn) {
-            balanceInquiryBtn.addEventListener('click', () => {
+            balanceInquiryBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Balance inquiry button clicked');
                 this.showOperationForm('balanceInquiry');
             });
+        } else {
+            console.error('Balance inquiry button not found');
         }
         
         // Scan Card Button (for issuance)
@@ -79,137 +93,71 @@ class CardOperationsHandler {
             });
         }
         
-        // Confirm Issuance Button
+        // Initialize balance buttons
+        const balanceButtons = document.querySelectorAll('.balance-btn');
+        balanceButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const amount = button.getAttribute('data-amount');
+                this.selectInitialBalance(amount);
+            });
+        });
+        
+        // Initialize topup buttons
+        const topupButtons = document.querySelectorAll('.topup-btn');
+        topupButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const amount = button.getAttribute('data-amount');
+                this.selectTopupAmount(amount);
+            });
+        });
+        
+        // Confirm issuance button
         const confirmIssuanceBtn = document.getElementById('confirmIssuanceBtn');
         if (confirmIssuanceBtn) {
-            confirmIssuanceBtn.addEventListener('click', () => {
+            confirmIssuanceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Confirm issuance button clicked');
                 this.confirmIssuance();
             });
         }
         
-        // Confirm Top-up Button
+        // Confirm topup button
         const confirmTopupBtn = document.getElementById('confirmTopupBtn');
         if (confirmTopupBtn) {
-            confirmTopupBtn.addEventListener('click', () => {
+            confirmTopupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Confirm topup button clicked');
                 this.confirmTopup();
             });
         }
         
-        // Cancel Issuance Button
+        // Cancel issuance button
         const cancelIssuanceBtn = document.getElementById('cancelIssuanceBtn');
         if (cancelIssuanceBtn) {
-            cancelIssuanceBtn.addEventListener('click', () => {
+            cancelIssuanceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Cancel issuance button clicked');
                 this.cancelOperation();
             });
         }
         
-        // Cancel Top-up Button
+        // Cancel topup button
         const cancelTopupBtn = document.getElementById('cancelTopupBtn');
         if (cancelTopupBtn) {
-            cancelTopupBtn.addEventListener('click', () => {
+            cancelTopupBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Cancel topup button clicked');
                 this.cancelOperation();
             });
         }
         
-        // Close Balance Button
+        // Close balance button
         const closeBalanceBtn = document.getElementById('closeBalanceBtn');
         if (closeBalanceBtn) {
-            closeBalanceBtn.addEventListener('click', () => {
+            closeBalanceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Close balance button clicked');
                 this.cancelOperation();
-            });
-        }
-
-        // Initialize balance buttons with touchstart and click events
-        const balanceButtons = document.querySelectorAll('.balance-btn');
-        if (balanceButtons.length > 0) {
-            balanceButtons.forEach(button => {
-                const handleBalanceButtonAction = () => {
-                    console.log('Balance button clicked');
-                    const clickedAmount = parseInt(button.getAttribute('data-amount'));
-                    const initialBalanceInput = document.getElementById('initialBalance');
-                    const selectedBalanceText = document.getElementById('selectedBalance');
-                    
-                    // Get current amount or default to 0
-                    let currentAmount = initialBalanceInput ? parseInt(initialBalanceInput.value) || 0 : 0;
-                    
-                    // Add the clicked amount to the current amount
-                    const newAmount = currentAmount + clickedAmount;
-                    console.log(`Adding ${clickedAmount} to balance. New total: ${newAmount}`);
-                    
-                    // Update the hidden input value
-                    if (initialBalanceInput) {
-                        initialBalanceInput.value = newAmount;
-                    }
-                    
-                    // Update the selected amount text
-                    if (selectedBalanceText) {
-                        selectedBalanceText.textContent = `Selected: ₹${newAmount}`;
-                    }
-                    
-                    // Highlight the selected button
-                    button.classList.remove('bg-gray-200', 'text-gray-800');
-                    button.classList.add('bg-blue-200', 'text-blue-800');
-                    
-                    // After a short delay, reset the button highlight
-                    setTimeout(() => {
-                        button.classList.remove('bg-blue-200', 'text-blue-800');
-                        button.classList.add('bg-gray-200', 'text-gray-800');
-                    }, 300);
-                };
-                
-                // Add both click and touchstart events for better mobile support
-                button.addEventListener('click', handleBalanceButtonAction);
-                button.addEventListener('touchstart', function(e) {
-                    e.preventDefault(); // Prevent default touch behavior
-                    handleBalanceButtonAction();
-                });
-            });
-        }
-
-        // Initialize topup buttons with touchstart and click events
-        const topupButtons = document.querySelectorAll('.topup-btn');
-        if (topupButtons.length > 0) {
-            topupButtons.forEach(button => {
-                const handleTopupButtonAction = () => {
-                    console.log('Topup button clicked');
-                    const clickedAmount = parseInt(button.getAttribute('data-amount'));
-                    const topupAmountInput = document.getElementById('topupAmount');
-                    const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
-                    
-                    // Get current amount or default to 0
-                    let currentAmount = topupAmountInput ? parseInt(topupAmountInput.value) || 0 : 0;
-                    
-                    // Add the clicked amount to the current amount
-                    const newAmount = currentAmount + clickedAmount;
-                    console.log(`Adding ${clickedAmount} to topup. New total: ${newAmount}`);
-                    
-                    // Update the hidden input value
-                    if (topupAmountInput) {
-                        topupAmountInput.value = newAmount;
-                    }
-                    
-                    // Update the selected amount text
-                    if (selectedTopupAmountText) {
-                        selectedTopupAmountText.textContent = `Selected: ₹${newAmount}`;
-                    }
-                    
-                    // Highlight the selected button
-                    button.classList.remove('bg-gray-200', 'text-gray-800');
-                    button.classList.add('bg-blue-200', 'text-blue-800');
-                    
-                    // After a short delay, reset the button highlight
-                    setTimeout(() => {
-                        button.classList.remove('bg-blue-200', 'text-blue-800');
-                        button.classList.add('bg-gray-200', 'text-gray-800');
-                    }, 300);
-                };
-                
-                // Add both click and touchstart events for better mobile support
-                button.addEventListener('click', handleTopupButtonAction);
-                button.addEventListener('touchstart', function(e) {
-                    e.preventDefault(); // Prevent default touch behavior
-                    handleTopupButtonAction();
-                });
             });
         }
     }
@@ -218,102 +166,145 @@ class CardOperationsHandler {
      * Show the appropriate operation form and hide others
      */
     showOperationForm(operation) {
-        // Hide all operation forms first
-        document.getElementById('cardIssuanceForm').classList.add('hidden');
-        document.getElementById('topupFormContainer').classList.add('hidden');
-        document.getElementById('balanceInquiryForm').classList.add('hidden');
+        console.log(`Showing operation form: ${operation}`);
         
-        // Reset any previous operation
-        this.cancelOperation();
-        
-        // Show the selected operation form
-        if (operation === 'cardIssuance') {
-            document.getElementById('cardIssuanceForm').classList.remove('hidden');
-            document.getElementById('issuanceStep1').classList.remove('hidden');
-            document.getElementById('issuanceStep2').classList.add('hidden');
-            this.currentOperation = 'issuance';
-        } else if (operation === 'topup') {
-            document.getElementById('topupFormContainer').classList.remove('hidden');
-            document.getElementById('topupStep1').classList.remove('hidden');
-            document.getElementById('topupStep2').classList.add('hidden');
-            this.currentOperation = 'topup';
-        } else if (operation === 'balanceInquiry') {
-            document.getElementById('balanceInquiryForm').classList.remove('hidden');
-            document.getElementById('balanceResult').classList.add('hidden');
-            this.currentOperation = 'balance';
+        try {
+            // Get all form elements
+            const cardIssuanceForm = document.getElementById('cardIssuanceForm');
+            const topupFormContainer = document.getElementById('topupFormContainer');
+            const balanceInquiryForm = document.getElementById('balanceInquiryForm');
+            const operationForms = document.getElementById('operationForms');
+            
+            if (!cardIssuanceForm) console.error('Card issuance form not found');
+            if (!topupFormContainer) console.error('Topup form container not found');
+            if (!balanceInquiryForm) console.error('Balance inquiry form not found');
+            if (!operationForms) console.error('Operation forms container not found');
+            
+            // Hide all operation forms first
+            if (cardIssuanceForm) cardIssuanceForm.classList.add('hidden');
+            if (topupFormContainer) topupFormContainer.classList.add('hidden');
+            if (balanceInquiryForm) balanceInquiryForm.classList.add('hidden');
+            
+            // Reset any previous operation
+            this.cancelOperation();
+            
+            // Show the selected operation form
+            if (operation === 'cardIssuance' && cardIssuanceForm) {
+                cardIssuanceForm.classList.remove('hidden');
+                const issuanceStep1 = document.getElementById('issuanceStep1');
+                const issuanceStep2 = document.getElementById('issuanceStep2');
+                
+                if (issuanceStep1) issuanceStep1.classList.remove('hidden');
+                if (issuanceStep2) issuanceStep2.classList.add('hidden');
+                this.currentOperation = 'issuance';
+                console.log('Card issuance form displayed');
+            } else if (operation === 'topup' && topupFormContainer) {
+                topupFormContainer.classList.remove('hidden');
+                const topupStep1 = document.getElementById('topupStep1');
+                const topupStep2 = document.getElementById('topupStep2');
+                
+                if (topupStep1) topupStep1.classList.remove('hidden');
+                if (topupStep2) topupStep2.classList.add('hidden');
+                this.currentOperation = 'topup';
+                console.log('Topup form displayed');
+            } else if (operation === 'balanceInquiry' && balanceInquiryForm) {
+                balanceInquiryForm.classList.remove('hidden');
+                const balanceResult = document.getElementById('balanceResult');
+                
+                if (balanceResult) balanceResult.classList.add('hidden');
+                this.currentOperation = 'balance';
+                console.log('Balance inquiry form displayed');
+            }
+            
+            // Scroll to the form
+            if (operationForms) {
+                operationForms.scrollIntoView({ behavior: 'smooth' });
+                console.log('Scrolled to operation forms');
+            }
+            
+            // Show status message to confirm form is displayed
+            this.showStatus(`${operation} form is now displayed`, 'info');
+        } catch (error) {
+            console.error('Error showing operation form:', error);
+            this.showStatus(`Error showing ${operation} form: ${error.message}`, 'error');
         }
-        
-        // Scroll to the form
-        document.getElementById('operationForms').scrollIntoView({ behavior: 'smooth' });
     }
-    
+
     /**
      * Cancel the current operation and reset the forms
      */
     cancelOperation() {
-        // Reset forms
-        if (this.issueCardForm) {
-            this.issueCardForm.reset();
-        }
-        if (this.topupForm) {
-            this.topupForm.reset();
-        }
+        console.log('Canceling current operation');
         
-        // Reset selected amounts
-        const selectedBalanceText = document.getElementById('selectedBalance');
-        if (selectedBalanceText) {
-            selectedBalanceText.textContent = 'Selected: ₹0';
-        }
-        
-        const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
-        if (selectedTopupAmountText) {
-            selectedTopupAmountText.textContent = 'Selected: ₹0';
-        }
-        
-        // Reset hidden inputs
-        const initialBalanceInput = document.getElementById('initialBalance');
-        if (initialBalanceInput) {
-            initialBalanceInput.value = '0';
-        }
-        
-        const topupAmountInput = document.getElementById('topupAmount');
-        if (topupAmountInput) {
-            topupAmountInput.value = '0';
-        }
-        
-        const nfcCardIdInput = document.getElementById('nfcCardId');
-        if (nfcCardIdInput) {
-            nfcCardIdInput.value = '';
-        }
-        
-        const topupCardIdInput = document.getElementById('topupCardId');
-        if (topupCardIdInput) {
-            topupCardIdInput.value = '';
-        }
-        
-        // Reset operation state
-        this.cardId = null;
-        this.isProcessing = false;
-        this.secondEntryPending = false;
-        
-        // Stop any ongoing NFC reading
-        if (this.nfcHandler) {
-            this.nfcHandler.stopReading();
-        }
-        
-        // Reset scan button text
-        this.updateScanButtonText('issuance', false);
-        this.updateScanButtonText('topup', false);
-        this.updateScanButtonText('balance', false);
-        
-        // Hide all operation forms
-        document.getElementById('cardIssuanceForm').classList.add('hidden');
-        document.getElementById('topupFormContainer').classList.add('hidden');
-        document.getElementById('balanceInquiryForm').classList.add('hidden');
-        
-        // Hide status message
-        if (this.operationStatus) {
-            this.operationStatus.classList.add('hidden');
+        try {
+            // Reset forms
+            if (this.issueCardForm) {
+                this.issueCardForm.reset();
+            }
+            if (this.topupForm) {
+                this.topupForm.reset();
+            }
+            
+            // Reset selected amounts
+            const selectedBalanceText = document.getElementById('selectedBalance');
+            if (selectedBalanceText) {
+                selectedBalanceText.textContent = 'Selected: ₹0';
+            }
+            
+            const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+            if (selectedTopupAmountText) {
+                selectedTopupAmountText.textContent = 'Selected: ₹0';
+            }
+            
+            // Reset hidden inputs
+            const initialBalanceInput = document.getElementById('initialBalance');
+            if (initialBalanceInput) {
+                initialBalanceInput.value = '0';
+            }
+            
+            const topupAmountInput = document.getElementById('topupAmount');
+            if (topupAmountInput) {
+                topupAmountInput.value = '0';
+            }
+            
+            const nfcCardIdInput = document.getElementById('nfcCardId');
+            if (nfcCardIdInput) {
+                nfcCardIdInput.value = '';
+            }
+            
+            const topupCardIdInput = document.getElementById('topupCardId');
+            if (topupCardIdInput) {
+                topupCardIdInput.value = '';
+            }
+            
+            // Reset operation state
+            this.cardId = null;
+            this.isProcessing = false;
+            this.secondEntryPending = false;
+            
+            // Stop any ongoing NFC reading
+            if (this.nfcHandler) {
+                this.nfcHandler.stopReading();
+            }
+            
+            // Reset scan button text
+            this.updateScanButtonText('issuance', false);
+            this.updateScanButtonText('topup', false);
+            this.updateScanButtonText('balance', false);
+            
+            // Get all form elements
+            const cardIssuanceForm = document.getElementById('cardIssuanceForm');
+            const topupFormContainer = document.getElementById('topupFormContainer');
+            const balanceInquiryForm = document.getElementById('balanceInquiryForm');
+            
+            // Hide all operation forms
+            if (cardIssuanceForm) cardIssuanceForm.classList.add('hidden');
+            if (topupFormContainer) topupFormContainer.classList.add('hidden');
+            if (balanceInquiryForm) balanceInquiryForm.classList.add('hidden');
+            
+            console.log('Operation canceled successfully');
+        } catch (error) {
+            console.error('Error canceling operation:', error);
         }
     }
     
@@ -339,13 +330,14 @@ class CardOperationsHandler {
             this.nfcHandler.startReading(operation, (cardId, error) => {
                 if (error) {
                     console.error('NFC reading error:', error);
-                    // Fall back to manual entry if there's an error
-                    this.fallbackToManualEntry(operation);
+                    this.showStatus(`NFC Error: ${error.message}. Please try again.`, 'error');
+                    this.isProcessing = false;
+                    this.updateScanButtonText(operation, false);
                     return;
                 }
                 
                 if (!cardId) {
-                    this.showStatus('Failed to read NFC card', 'error');
+                    this.showStatus('Failed to read NFC card. Please try again.', 'error');
                     this.isProcessing = false;
                     this.updateScanButtonText(operation, false);
                     return;
@@ -355,22 +347,7 @@ class CardOperationsHandler {
                 this.processCardId(operation, cardId);
             });
         } else {
-            // Fall back to manual entry if NFC is not supported
-            this.fallbackToManualEntry(operation);
-        }
-    }
-    
-    /**
-     * Fall back to manual card ID entry
-     */
-    fallbackToManualEntry(operation) {
-        // Create a modal or form for manual card ID entry
-        const cardIdInput = prompt('Please enter the card ID:');
-        
-        if (cardIdInput && cardIdInput.trim() !== '') {
-            this.processCardId(operation, cardIdInput);
-        } else {
-            this.showStatus('Card ID entry cancelled', 'info');
+            this.showStatus('NFC is not supported in this browser or device. Please use a compatible device.', 'error');
             this.isProcessing = false;
             this.updateScanButtonText(operation, false);
         }
@@ -449,10 +426,111 @@ class CardOperationsHandler {
         }
         
         // Show the second step of the issuance form
-        document.getElementById('issuanceStep1').classList.add('hidden');
-        document.getElementById('issuanceStep2').classList.remove('hidden');
+        const issuanceStep1 = document.getElementById('issuanceStep1');
+        const issuanceStep2 = document.getElementById('issuanceStep2');
+        
+        if (issuanceStep1) issuanceStep1.classList.add('hidden');
+        if (issuanceStep2) issuanceStep2.classList.remove('hidden');
         
         this.isProcessing = false;
+    }
+    
+    /**
+     * Handle the first entry for topup
+     */
+    handleTopupFirstEntry(cardId) {
+        this.cardId = cardId;
+        this.showStatus('Retrieving card information...', 'info');
+        
+        // Fetch card information from the server
+        fetch(`/api/cards/${cardId}/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Update the card info display
+            const cardIdDisplay = document.querySelector('#cardIdDisplay span');
+            const cardCustomerDisplay = document.querySelector('#cardCustomerDisplay span');
+            const cardBalanceDisplay = document.querySelector('#cardBalanceDisplay span');
+            
+            if (cardIdDisplay) cardIdDisplay.textContent = data.card_id;
+            if (cardCustomerDisplay) cardCustomerDisplay.textContent = data.customer_name;
+            if (cardBalanceDisplay) cardBalanceDisplay.textContent = `₹${data.balance}`;
+            
+            // Update the hidden input field with the card ID
+            const topupCardIdInput = document.getElementById('topupCardId');
+            if (topupCardIdInput) {
+                topupCardIdInput.value = cardId;
+            }
+            
+            // Show the second step of the topup form
+            const topupStep1 = document.getElementById('topupStep1');
+            const topupStep2 = document.getElementById('topupStep2');
+            
+            if (topupStep1) topupStep1.classList.add('hidden');
+            if (topupStep2) topupStep2.classList.remove('hidden');
+            
+            this.showStatus('Card information retrieved successfully', 'success');
+        })
+        .catch(error => {
+            this.showStatus(`Error retrieving card information: ${error.message}`, 'error');
+        })
+        .finally(() => {
+            this.isProcessing = false;
+        });
+    }
+    
+    /**
+     * Handle balance inquiry
+     */
+    handleBalanceInquiry(cardId) {
+        this.showStatus('Retrieving card balance...', 'info');
+        
+        // Fetch card information from the server
+        fetch(`/api/cards/${cardId}/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Update the balance result display
+            const balanceCardId = document.querySelector('#balanceCardId span');
+            const balanceCustomerName = document.querySelector('#balanceCustomerName span');
+            const balanceAmount = document.getElementById('balanceAmount');
+            
+            if (balanceCardId) balanceCardId.textContent = data.card_id;
+            if (balanceCustomerName) balanceCustomerName.textContent = data.customer_name;
+            if (balanceAmount) balanceAmount.textContent = data.balance;
+            
+            // Show the balance result
+            const balanceResult = document.getElementById('balanceResult');
+            if (balanceResult) {
+                balanceResult.classList.remove('hidden');
+            }
+            
+            this.showStatus('Card balance retrieved successfully', 'success');
+        })
+        .catch(error => {
+            this.showStatus(`Error retrieving card balance: ${error.message}`, 'error');
+        })
+        .finally(() => {
+            this.isProcessing = false;
+        });
     }
     
     /**
@@ -481,132 +559,63 @@ class CardOperationsHandler {
     }
     
     /**
-     * Complete the card issuance after the second entry
+     * Complete the card issuance process
      */
-    async completeIssuance(cardId) {
-        try {
-            const customerName = document.getElementById('customerName').value;
-            const customerMobile = document.getElementById('customerMobile').value;
-            const initialBalance = document.getElementById('initialBalance').value;
-            const userId = document.getElementById('userId').value;
-            const nfcCardId = document.getElementById('nfcCardId').value;
-            
-            // Verify that the second entry matches the first entry
-            if (cardId !== nfcCardId) {
-                this.showStatus('The entered card ID does not match the initial card ID. Please start over.', 'error');
-                this.secondEntryPending = false;
-                this.isProcessing = false;
-                return;
-            }
-
-            this.showStatus('Issuing card...', 'info');
-
-            // Get the CSRF token
-            const csrftoken = this.getCookie('csrftoken');
-            
-            const response = await fetch('/api/cards/issue/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken,
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                credentials: 'same-origin', // Include cookies in the request
-                body: JSON.stringify({
-                    customer_name: customerName,
-                    customer_mobile: customerMobile,
-                    initial_balance: initialBalance,
-                    user_id: userId,
-                    nfc_card_id: nfcCardId
-                })
-            });
-
-            let result;
-            try {
-                result = await response.json();
-            } catch (e) {
-                console.error('Error parsing JSON response:', e);
-                throw new Error('Invalid response from server');
-            }
-
-            if (response.ok) {
-                this.showStatus(`Card issued successfully! Card ID: ${result.card_id || 'Unknown'}`, 'success');
-                
-                // Reset the form and state
-                this.secondEntryPending = false;
-                
-                // Reset the selected balance text
-                const selectedBalanceText = document.getElementById('selectedBalance');
-                if (selectedBalanceText) {
-                    selectedBalanceText.textContent = 'Selected: ₹0';
-                }
-                
-                // Hide the form after a delay
-                setTimeout(() => {
-                    document.getElementById('cardIssuanceForm').classList.add('hidden');
-                    
-                    // Refresh card list
-                    this.loadCards();
-                }, 2000);
-            } else {
-                throw new Error(result.error || 'Failed to issue card');
-            }
-        } catch (error) {
-            console.error('Error issuing card:', error);
-            this.showStatus('Failed to issue card: ' + error.message, 'error');
+    completeIssuance(cardId) {
+        if (cardId !== this.cardId) {
+            this.showStatus('Card ID mismatch. Please use the same card for confirmation.', 'error');
             this.secondEntryPending = false;
+            this.isProcessing = false;
+            return;
         }
         
-        this.isProcessing = false;
-    }
-    
-    /**
-     * Handle the first entry for card top-up
-     */
-    async handleTopupFirstEntry(cardId) {
-        try {
-            this.showStatus(`Card ID entered successfully! Looking up card...`, 'info');
-            
-            // Find the card by secure key (card ID)
-            const response = await fetch('/api/cards/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to load cards');
-            }
-            
-            const cards = await response.json();
-            const matchingCard = cards.find(card => card.secure_key === cardId);
-            
-            if (matchingCard) {
-                // Store the card ID for the second entry
-                const topupCardIdInput = document.getElementById('topupCardId');
-                if (topupCardIdInput) {
-                    topupCardIdInput.value = cardId;
-                }
-                
-                // Display card information
-                document.getElementById('cardIdDisplay').querySelector('span').textContent = matchingCard.card_id;
-                document.getElementById('cardCustomerDisplay').querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
-                document.getElementById('cardBalanceDisplay').querySelector('span').textContent = `₹${matchingCard.balance}`;
-                
-                // Show the second step of the top-up form
-                document.getElementById('topupStep1').classList.add('hidden');
-                document.getElementById('topupStep2').classList.remove('hidden');
-                
-                this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
-            } else {
-                this.showStatus('No matching card found for this card ID', 'error');
-            }
-        } catch (error) {
-            console.error('Error finding card:', error);
-            this.showStatus(`Error finding card: ${error.message}`, 'error');
-        }
+        const customerName = document.getElementById('customerName').value;
+        const customerMobile = document.getElementById('customerMobile').value;
+        const initialBalance = document.getElementById('initialBalance').value;
+        const userId = document.getElementById('userId').value;
+        const nfcCardId = document.getElementById('nfcCardId').value;
         
-        this.isProcessing = false;
+        this.showStatus('Processing card issuance...', 'info');
+        
+        // Send the issuance request to the server
+        fetch('/api/cards/issue/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                card_id: nfcCardId,
+                customer_name: customerName,
+                customer_mobile: customerMobile,
+                initial_balance: initialBalance,
+                user_id: userId
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
+            this.showStatus('Card issued successfully!', 'success');
+            
+            // Reset the form
+            this.cancelOperation();
+            
+            // Reload the card list
+            this.loadCards();
+            
+            // Scroll to the card list
+            document.querySelector('.card-list-container').scrollIntoView({ behavior: 'smooth' });
+        })
+        .catch(error => {
+            this.showStatus(`Card issuance failed: ${error.message}`, 'error');
+        })
+        .finally(() => {
+            this.secondEntryPending = false;
+            this.isProcessing = false;
+        });
     }
     
     /**
@@ -628,283 +637,196 @@ class CardOperationsHandler {
     }
     
     /**
-     * Complete the top-up after the second entry
+     * Complete the top-up process
      */
-    async completeTopup(cardId) {
-        try {
-            const topupAmount = document.getElementById('topupAmount').value;
-            const storedCardId = document.getElementById('topupCardId').value;
-            
-            // Verify that the second entry matches the first entry
-            if (cardId !== storedCardId) {
-                this.showStatus('The entered card ID does not match the initial card ID. Please start over.', 'error');
-                this.secondEntryPending = false;
-                this.isProcessing = false;
-                return;
-            }
-            
-            this.showStatus('Processing top-up...', 'info');
-            
-            // Find the card by secure key (card ID)
-            const cardsResponse = await fetch('/api/cards/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                    'X-CSRFToken': this.getCookie('csrftoken')
-                },
-                credentials: 'same-origin' // Include cookies in the request
-            });
-            
-            if (!cardsResponse.ok) {
-                throw new Error('Failed to load cards');
-            }
-            
-            let cards;
-            try {
-                cards = await cardsResponse.json();
-            } catch (e) {
-                console.error('Error parsing JSON response:', e);
-                throw new Error('Invalid response from server when loading cards');
-            }
-            
-            const matchingCard = cards.find(card => card.secure_key === cardId);
-            
-            if (!matchingCard) {
-                throw new Error('Card not found');
-            }
-            
-            // Process the top-up
-            const response = await fetch(`/api/cards/${matchingCard.id}/topup/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                credentials: 'same-origin', // Include cookies in the request
-                body: JSON.stringify({
-                    amount: topupAmount
-                })
-            });
-
-            let result;
-            try {
-                result = await response.json();
-            } catch (e) {
-                console.error('Error parsing JSON response:', e);
-                throw new Error('Invalid response from server during top-up');
-            }
-
-            if (response.ok) {
-                this.showStatus(`Top-up successful! New balance: ₹${result.new_balance || 0}`, 'success');
-                
-                // Reset the form and state
-                this.secondEntryPending = false;
-                
-                // Reset the selected topup amount text
-                const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
-                if (selectedTopupAmountText) {
-                    selectedTopupAmountText.textContent = 'Selected: ₹0';
-                }
-                
-                // Hide the form after a delay
-                setTimeout(() => {
-                    document.getElementById('topupFormContainer').classList.add('hidden');
-                    
-                    // Refresh card list
-                    this.loadCards();
-                }, 2000);
-            } else {
-                throw new Error(result.error || 'Failed to top-up card');
-            }
-        } catch (error) {
-            console.error('Error topping up card:', error);
-            this.showStatus('Failed to top-up card: ' + error.message, 'error');
+    completeTopup(cardId) {
+        if (cardId !== this.cardId) {
+            this.showStatus('Card ID mismatch. Please use the same card for confirmation.', 'error');
             this.secondEntryPending = false;
+            this.isProcessing = false;
+            return;
         }
         
-        this.isProcessing = false;
+        const topupAmount = document.getElementById('topupAmount').value;
+        const topupCardId = document.getElementById('topupCardId').value;
+        
+        this.showStatus('Processing top-up...', 'info');
+        
+        // Send the top-up request to the server
+        fetch('/api/transactions/topup/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                card_id: topupCardId,
+                amount: topupAmount
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
+            this.showStatus(`Top-up successful! New balance: ₹${result.new_balance}`, 'success');
+            
+            // Reset the form
+            this.cancelOperation();
+            
+            // Reload the card list
+            this.loadCards();
+        })
+        .catch(error => {
+            this.showStatus(`Top-up failed: ${error.message}`, 'error');
+        })
+        .finally(() => {
+            this.secondEntryPending = false;
+            this.isProcessing = false;
+        });
     }
     
     /**
-     * Handle balance inquiry
+     * Select initial balance amount
      */
-    async handleBalanceInquiry(cardId) {
-        try {
-            this.showStatus(`Card ID entered successfully! Looking up balance...`, 'info');
-            
-            // Find the card by secure key (card ID)
-            const response = await fetch('/api/cards/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-                    'X-CSRFToken': this.getCookie('csrftoken')
-                },
-                credentials: 'same-origin' // Include cookies in the request
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to load cards');
-            }
-            
-            let cards;
-            try {
-                cards = await response.json();
-            } catch (e) {
-                console.error('Error parsing JSON response:', e);
-                throw new Error('Invalid response from server when loading cards');
-            }
-            
-            const matchingCard = cards.find(card => card.secure_key === cardId);
-            
-            if (matchingCard) {
-                // Display balance information
-                const balanceCardIdElement = document.getElementById('balanceCardId');
-                if (balanceCardIdElement && balanceCardIdElement.querySelector('span')) {
-                    balanceCardIdElement.querySelector('span').textContent = matchingCard.card_id;
-                }
-                
-                const balanceCustomerNameElement = document.getElementById('balanceCustomerName');
-                if (balanceCustomerNameElement && balanceCustomerNameElement.querySelector('span')) {
-                    balanceCustomerNameElement.querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
-                }
-                
-                const balanceAmountElement = document.getElementById('balanceAmount');
-                if (balanceAmountElement) {
-                    balanceAmountElement.textContent = matchingCard.balance;
-                }
-                
-                // Show the balance result
-                const balanceResultElement = document.getElementById('balanceResult');
-                if (balanceResultElement) {
-                    balanceResultElement.classList.remove('hidden');
-                }
-                
-                this.showStatus(`Balance inquiry successful!`, 'success');
-            } else {
-                this.showStatus('No matching card found for this card ID', 'error');
-            }
-        } catch (error) {
-            console.error('Error checking balance:', error);
-            this.showStatus(`Error checking balance: ${error.message}`, 'error');
+    selectInitialBalance(amount) {
+        const initialBalanceInput = document.getElementById('initialBalance');
+        const selectedBalanceText = document.getElementById('selectedBalance');
+        
+        if (initialBalanceInput) {
+            initialBalanceInput.value = amount;
         }
         
-        this.isProcessing = false;
-    }
-
-    // Helper method to get cookie by name
-    getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
+        if (selectedBalanceText) {
+            selectedBalanceText.textContent = `Selected: ₹${amount}`;
         }
-        return cookieValue;
-    }
-
-    async loadCards() {
-        try {
-            console.log('Loading cards...');
-            
-            // Get the CSRF token from the cookie
-            const csrftoken = this.getCookie('csrftoken');
-            // Get the access token from localStorage
-            const accessToken = localStorage.getItem('access_token');
-            
-            const response = await fetch('/api/cards/', {
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                credentials: 'same-origin' // Include cookies in the request
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to load cards: ${response.status} ${response.statusText}`);
+        
+        // Highlight the selected button
+        const balanceButtons = document.querySelectorAll('.balance-btn');
+        balanceButtons.forEach(button => {
+            if (button.getAttribute('data-amount') === amount) {
+                button.classList.remove('bg-gray-200', 'hover:bg-gray-300', 'text-gray-800');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+            } else {
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+                button.classList.add('bg-gray-200', 'hover:bg-gray-300', 'text-gray-800');
             }
-
-            const cards = await response.json();
-            console.log('Cards loaded:', cards);
-
-            // Populate card list
-            if (this.cardList) {
-                if (cards.length === 0) {
-                    this.cardList.innerHTML = '<p class="text-gray-500 text-center py-4">No cards found</p>';
-                    return;
-                }
-
-                this.cardList.innerHTML = cards.map(card => `
-                    <div class="bg-gray-50 rounded-lg p-5 border border-gray-200 mb-5">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                            <div class="mb-4 sm:mb-0">
-                                <h4 class="text-xl font-medium text-gray-900">${card.card_id}</h4>
-                                <p class="text-base text-gray-600 mt-2">
-                                    <span class="font-medium">Customer:</span> ${card.customer_name || 'N/A'} 
-                                    ${card.customer_mobile ? `<br><span class="font-medium">Mobile:</span> ${card.customer_mobile}` : ''}
-                                </p>
-                                <p class="text-base text-gray-600 mt-2">
-                                    <span class="font-medium">Balance:</span> <span class="text-lg">₹${card.balance}</span>
-                                </p>
-                                <p class="text-base text-gray-600 mt-2">
-                                    <span class="font-medium">Status:</span> 
-                                    <span class="${card.active ? 'text-green-600' : 'text-red-600'} font-medium">
-                                        ${card.active ? 'Active' : 'Inactive'}
-                                    </span>
-                                </p>
-                            </div>
-                            <div>
-                                <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors card-topup-btn text-lg font-medium" data-card-id="${card.id}">
-                                    Top-up
-                                </button>
-                            </div>
-                        </div>
+        });
+    }
+    
+    /**
+     * Select top-up amount
+     */
+    selectTopupAmount(amount) {
+        const topupAmountInput = document.getElementById('topupAmount');
+        const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+        
+        if (topupAmountInput) {
+            topupAmountInput.value = amount;
+        }
+        
+        if (selectedTopupAmountText) {
+            selectedTopupAmountText.textContent = `Selected: ₹${amount}`;
+        }
+        
+        // Highlight the selected button
+        const topupButtons = document.querySelectorAll('.topup-btn');
+        topupButtons.forEach(button => {
+            if (button.getAttribute('data-amount') === amount) {
+                button.classList.remove('bg-gray-200', 'hover:bg-gray-300', 'text-gray-800');
+                button.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+            } else {
+                button.classList.remove('bg-green-600', 'hover:bg-green-700', 'text-white');
+                button.classList.add('bg-gray-200', 'hover:bg-gray-300', 'text-gray-800');
+            }
+        });
+    }
+    
+    /**
+     * Load the list of issued cards
+     */
+    loadCards() {
+        if (!this.cardList) return;
+        
+        this.cardList.innerHTML = '<p class="text-gray-500 text-center py-4">Loading cards...</p>';
+        
+        fetch('/api/cards/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            if (data.length === 0) {
+                this.cardList.innerHTML = '<p class="text-gray-500 text-center py-4">No cards issued yet</p>';
+                return;
+            }
+            
+            // Clear the card list
+            this.cardList.innerHTML = '';
+            
+            // Add each card to the list
+            data.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'bg-gray-50 p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center';
+                
+                cardElement.innerHTML = `
+                    <div>
+                        <p class="text-lg font-medium text-gray-800">${card.customer_name}</p>
+                        <p class="text-sm text-gray-600">Card ID: ${card.card_id}</p>
+                        <p class="text-sm text-gray-600">Mobile: ${card.customer_mobile}</p>
                     </div>
-                `).join('');
-
-                // Add event listeners to top-up buttons
-                document.querySelectorAll('.card-topup-btn').forEach(button => {
-                    button.addEventListener('click', () => {
-                        // Show the top-up form
-                        this.showOperationForm('topup');
-                    });
-                });
-            }
-        } catch (error) {
-            console.error('Error loading cards:', error);
-            if (this.cardList) {
-                this.cardList.innerHTML = `<p class="text-red-500 text-center py-4">Error loading cards: ${error.message}</p>`;
-            }
-            this.showStatus('Failed to load cards: ' + error.message, 'error');
-        }
+                    <div class="mt-2 md:mt-0">
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Balance: ₹${card.balance}
+                        </span>
+                    </div>
+                `;
+                
+                this.cardList.appendChild(cardElement);
+            });
+        })
+        .catch(error => {
+            this.cardList.innerHTML = `<p class="text-red-500 text-center py-4">Error loading cards: ${error.message}</p>`;
+        });
     }
-
+    
+    /**
+     * Show a status message
+     */
     showStatus(message, type = 'info') {
         if (!this.operationStatus) return;
-
-        this.operationStatus.className = `rounded-lg p-4 mb-6 ${
-            type === 'success' ? 'bg-green-100 text-green-800' : 
-            type === 'error' ? 'bg-red-100 text-red-800' : 
-            'bg-blue-100 text-blue-800'
-        }`;
-        this.operationStatus.textContent = message;
-        this.operationStatus.classList.remove('hidden');
-
-        // Auto-hide after 5 seconds for success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                this.operationStatus.classList.add('hidden');
-            }, 5000);
+        
+        // Set the appropriate class based on the message type
+        let className = 'rounded-lg p-4 mb-6 ';
+        
+        if (type === 'error') {
+            className += 'bg-red-100 text-red-800';
+        } else if (type === 'success') {
+            className += 'bg-green-100 text-green-800';
+        } else if (type === 'warning') {
+            className += 'bg-yellow-100 text-yellow-800';
+        } else {
+            className += 'bg-blue-100 text-blue-800';
         }
+        
+        this.operationStatus.className = className;
+        this.operationStatus.innerHTML = message;
+        this.operationStatus.classList.remove('hidden');
+        
+        // Scroll to the status message
+        this.operationStatus.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
-// Initialize the card operations handler when the document is ready
+// Initialize the card operations handler when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const cardOperations = new CardOperationsHandler();
+    new CardOperationsHandler();
 });

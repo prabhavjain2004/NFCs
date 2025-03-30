@@ -1,17 +1,17 @@
 /**
  * NFC Handler
- * Handles NFC card operations using the Web NFC API
+ * Handles NFC card detection and reading using the Web NFC API
  */
 class NFCHandler {
     constructor() {
         this.isNFCSupported = 'NDEFReader' in window;
-        this.isReading = false;
         this.reader = null;
+        this.isReading = false;
+        this.statusCallback = null;
         this.currentOperation = null;
         this.operationCallback = null;
-        this.statusCallback = null;
     }
-
+    
     /**
      * Check if NFC is supported by the browser
      * @returns {boolean} True if NFC is supported, false otherwise
@@ -33,9 +33,10 @@ class NFCHandler {
     
     /**
      * Request NFC permissions explicitly
+     * This method is called directly from the UI
      * @returns {Promise<boolean>} Promise resolving to true if permission granted, false otherwise
      */
-    async requestNFCPermission() {
+    async requestPermission() {
         if (!this.checkNFCSupport()) {
             return false;
         }
@@ -51,7 +52,7 @@ class NFCHandler {
             return false;
         }
     }
-
+    
     /**
      * Set the status callback function
      * @param {Function} callback The callback function to display status messages
@@ -59,32 +60,20 @@ class NFCHandler {
     setStatusCallback(callback) {
         this.statusCallback = callback;
     }
-
+    
     /**
-     * Show status message using the callback if available
+     * Show a status message
      * @param {string} message The message to display
-     * @param {string} type The type of message (info, success, error)
+     * @param {string} type The type of message (info, success, error, warning)
      */
     showStatus(message, type = 'info') {
-        console.log(`[NFC ${type}]: ${message}`);
         if (this.statusCallback) {
             this.statusCallback(message, type);
+        } else {
+            console.log(`[${type.toUpperCase()}] ${message}`);
         }
     }
-
-    /**
-     * Generate a 16-character alphanumeric unique ID
-     * @returns {string} A 16-character alphanumeric ID
-     */
-    generateUniqueID() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < 16; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
+    
     /**
      * Start reading NFC cards
      * @param {string} operation The operation being performed (issuance, topup, balance)
@@ -156,68 +145,58 @@ class NFCHandler {
             }
         }
     }
-
+    
     /**
      * Stop reading NFC cards
      */
     stopReading() {
-        if (this.reader) {
-            // The Web NFC API doesn't have a direct method to stop scanning
-            // We'll just set our internal state to indicate we're no longer interested in readings
-            this.isReading = false;
-            this.currentOperation = null;
-            this.operationCallback = null;
-            this.showStatus('NFC reading stopped', 'info');
+        if (this.reader && this.isReading) {
+            try {
+                // There's no explicit stop method in the Web NFC API
+                // We just set the flag to false and ignore future readings
+                this.isReading = false;
+                this.currentOperation = null;
+                this.operationCallback = null;
+                console.log('NFC reading stopped');
+            } catch (error) {
+                console.error('Error stopping NFC reader:', error);
+            }
         }
     }
-
+    
     /**
      * Handle a card read event
-     * @param {string} serialNumber The serial number of the NFC card
+     * @param {string} serialNumber The serial number of the card
      */
     handleCardRead(serialNumber) {
-        if (!this.isReading || !this.operationCallback) {
+        if (!this.isReading) {
             return;
         }
-
-        this.showStatus(`Card detected! Serial: ${serialNumber}`, 'success');
         
-        // Call the callback with the card ID
-        this.operationCallback(serialNumber);
+        this.showStatus('Card detected!', 'success');
+        
+        // Call the operation callback with the card ID
+        if (this.operationCallback) {
+            this.operationCallback(serialNumber);
+        }
         
         // Stop reading after a successful read
-        this.isReading = false;
+        this.stopReading();
     }
-
+    
     /**
-     * Write data to an NFC card (for future use)
-     * @param {Object} data The data to write to the card
-     * @param {Function} callback The callback function to handle the result
+     * Generate a 16-character alphanumeric unique ID
+     * @returns {string} A 16-character alphanumeric unique ID
      */
-    async writeToCard(data, callback) {
-        if (!this.checkNFCSupport()) {
-            callback(false, new Error('NFC not supported'));
-            return;
+    generateUniqueID() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let uniqueId = '';
+        
+        // Generate a 16-character random string
+        for (let i = 0; i < 16; i++) {
+            uniqueId += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-
-        try {
-            this.showStatus('Waiting for NFC card to write data...', 'info');
-            
-            const writer = new NDEFReader();
-            await writer.write(data);
-            
-            this.showStatus('Data written to NFC card successfully', 'success');
-            if (callback) {
-                callback(true);
-            }
-        } catch (error) {
-            this.showStatus(`Error writing to NFC card: ${error.message}`, 'error');
-            if (callback) {
-                callback(false, error);
-            }
-        }
+        
+        return uniqueId;
     }
 }
-
-// Export the NFCHandler class
-window.NFCHandler = NFCHandler;
