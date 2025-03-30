@@ -9,6 +9,8 @@ class CardOperationsHandler {
         this.operationStatus = document.getElementById('operationStatus');
         this.cardSelect = document.getElementById('cardSelect');
         this.cardList = document.getElementById('cardList');
+        this.scanCardBtn = document.getElementById('scanCardBtn');
+        this.nfcCardId = null;
         
         this.initialize();
     }
@@ -19,6 +21,23 @@ class CardOperationsHandler {
             this.issueCardForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.issueCard();
+            });
+        }
+
+        // Initialize scan card buttons
+        if (this.scanCardBtn) {
+            this.scanCardBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.scanNfcCard();
+            });
+        }
+
+        // Initialize scan topup card button
+        const scanTopupCardBtn = document.getElementById('scanTopupCardBtn');
+        if (scanTopupCardBtn) {
+            scanTopupCardBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.scanTopupCard();
             });
         }
 
@@ -112,15 +131,110 @@ class CardOperationsHandler {
         }
     }
 
+    async scanNfcCard() {
+        try {
+            // Check if Web NFC API is available
+            if (!('NDEFReader' in window)) {
+                throw new Error('NFC is not supported on this device or browser');
+            }
+
+            this.showStatus('Waiting for NFC card...', 'info');
+            
+            const reader = new NDEFReader();
+            await reader.scan();
+
+            reader.onreading = ({ message, serialNumber }) => {
+                this.nfcCardId = serialNumber;
+                this.showStatus(`NFC card scanned successfully! Card ID: ${serialNumber}`, 'success');
+                
+                // Update the hidden input field with the NFC card ID
+                const nfcCardIdInput = document.getElementById('nfcCardId');
+                if (nfcCardIdInput) {
+                    nfcCardIdInput.value = serialNumber;
+                }
+                
+                reader.stop();
+            };
+
+            reader.onreadingerror = () => {
+                this.showStatus('Error reading NFC card', 'error');
+            };
+        } catch (error) {
+            this.showStatus(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    async scanTopupCard() {
+        try {
+            // Check if Web NFC API is available
+            if (!('NDEFReader' in window)) {
+                throw new Error('NFC is not supported on this device or browser');
+            }
+
+            this.showStatus('Waiting for NFC card...', 'info');
+            
+            const reader = new NDEFReader();
+            await reader.scan();
+
+            reader.onreading = async ({ message, serialNumber }) => {
+                this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
+                
+                try {
+                    // Find the card by secure key (NFC ID)
+                    const response = await fetch('/api/cards/', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load cards');
+                    }
+                    
+                    const cards = await response.json();
+                    const matchingCard = cards.find(card => card.secure_key === serialNumber);
+                    
+                    if (matchingCard) {
+                        // Select the card in the dropdown
+                        if (this.cardSelect) {
+                            this.cardSelect.value = matchingCard.id;
+                            this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
+                        } else {
+                            this.showStatus('Card select dropdown not found', 'error');
+                        }
+                    } else {
+                        this.showStatus('No matching card found for this NFC tag', 'error');
+                    }
+                } catch (error) {
+                    this.showStatus(`Error finding card: ${error.message}`, 'error');
+                }
+                
+                reader.stop();
+            };
+
+            reader.onreadingerror = () => {
+                this.showStatus('Error reading NFC card', 'error');
+            };
+        } catch (error) {
+            this.showStatus(`Error: ${error.message}`, 'error');
+        }
+    }
+
     async issueCard() {
         try {
             const customerName = document.getElementById('customerName').value;
             const customerMobile = document.getElementById('customerMobile').value;
             const initialBalance = document.getElementById('initialBalance').value;
             const userId = document.getElementById('userId').value;
+            const nfcCardId = document.getElementById('nfcCardId')?.value || this.nfcCardId;
 
             if (!customerName || !customerMobile) {
                 this.showStatus('Please enter customer name and mobile number', 'error');
+                return;
+            }
+
+            if (!nfcCardId) {
+                this.showStatus('Please scan an NFC card first', 'error');
                 return;
             }
 
@@ -134,7 +248,8 @@ class CardOperationsHandler {
                     customer_name: customerName,
                     customer_mobile: customerMobile,
                     initial_balance: initialBalance,
-                    user_id: userId
+                    user_id: userId,
+                    nfc_card_id: nfcCardId
                 })
             });
 

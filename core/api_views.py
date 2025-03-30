@@ -37,18 +37,41 @@ class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()
     permission_classes = [permissions.IsAuthenticated]
     
+    def get_serializer(self, *args, **kwargs):
+        """
+        Include secure_key in the serializer fields for admin users
+        """
+        serializer_class = self.get_serializer_class()
+        kwargs.setdefault('context', self.get_serializer_context())
+        
+        # If user is admin, include secure_key in the fields
+        if self.request.user.user_type == 'admin':
+            class AdminCardSerializer(serializer_class):
+                class Meta(serializer_class.Meta):
+                    fields = serializer_class.Meta.fields + ['secure_key']
+            
+            return AdminCardSerializer(*args, **kwargs)
+        
+        return serializer_class(*args, **kwargs)
+    
     @action(detail=False, methods=['post'])
     def issue(self, request):
         """Issue a new NFC card"""
         try:
-            # Generate a unique card ID and secure key
-            card_id = f"CARD{uuid.uuid4().hex[:8].upper()}"
-            secure_key = uuid.uuid4().hex
-            
             # Get data from request
             initial_balance = request.data.get('initial_balance', 0)
             customer_name = request.data.get('customer_name', '')
             customer_mobile = request.data.get('customer_mobile', '')
+            nfc_card_id = request.data.get('nfc_card_id', '')
+            
+            # Use the NFC card ID as the secure key if provided, otherwise generate one
+            if nfc_card_id:
+                secure_key = nfc_card_id
+                card_id = f"CARD{nfc_card_id[-8:].upper()}"
+            else:
+                # Generate a unique card ID and secure key
+                card_id = f"CARD{uuid.uuid4().hex[:8].upper()}"
+                secure_key = uuid.uuid4().hex
             
             # Create the card
             card = Card.objects.create(
