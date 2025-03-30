@@ -12,7 +12,13 @@ class CardOperationsHandler {
         this.scanCardBtn = document.getElementById('scanCardBtn');
         this.nfcCardId = null;
         
+        // Initialize immediately
         this.initialize();
+        
+        // Load cards immediately
+        if (this.cardList) {
+            this.loadCards();
+        }
     }
 
     initialize() {
@@ -54,27 +60,35 @@ class CardOperationsHandler {
         if (balanceButtons.length > 0) {
             balanceButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    const amount = button.getAttribute('data-amount');
+                    const clickedAmount = parseInt(button.getAttribute('data-amount'));
                     const initialBalanceInput = document.getElementById('initialBalance');
                     const selectedBalanceText = document.getElementById('selectedBalance');
                     
+                    // Get current amount or default to 0
+                    let currentAmount = initialBalanceInput ? parseInt(initialBalanceInput.value) || 0 : 0;
+                    
+                    // Add the clicked amount to the current amount
+                    const newAmount = currentAmount + clickedAmount;
+                    
                     // Update the hidden input value
                     if (initialBalanceInput) {
-                        initialBalanceInput.value = amount;
+                        initialBalanceInput.value = newAmount;
                     }
                     
                     // Update the selected amount text
                     if (selectedBalanceText) {
-                        selectedBalanceText.textContent = `Selected: ₹${amount}`;
+                        selectedBalanceText.textContent = `Selected: ₹${newAmount}`;
                     }
                     
                     // Highlight the selected button
-                    balanceButtons.forEach(btn => {
-                        btn.classList.remove('bg-blue-200', 'text-blue-800');
-                        btn.classList.add('bg-gray-200', 'text-gray-800');
-                    });
                     button.classList.remove('bg-gray-200', 'text-gray-800');
                     button.classList.add('bg-blue-200', 'text-blue-800');
+                    
+                    // After a short delay, reset the button highlight
+                    setTimeout(() => {
+                        button.classList.remove('bg-blue-200', 'text-blue-800');
+                        button.classList.add('bg-gray-200', 'text-gray-800');
+                    }, 300);
                 });
             });
         }
@@ -84,27 +98,35 @@ class CardOperationsHandler {
         if (topupButtons.length > 0) {
             topupButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    const amount = button.getAttribute('data-amount');
+                    const clickedAmount = parseInt(button.getAttribute('data-amount'));
                     const topupAmountInput = document.getElementById('topupAmount');
                     const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
                     
+                    // Get current amount or default to 0
+                    let currentAmount = topupAmountInput ? parseInt(topupAmountInput.value) || 0 : 0;
+                    
+                    // Add the clicked amount to the current amount
+                    const newAmount = currentAmount + clickedAmount;
+                    
                     // Update the hidden input value
                     if (topupAmountInput) {
-                        topupAmountInput.value = amount;
+                        topupAmountInput.value = newAmount;
                     }
                     
                     // Update the selected amount text
                     if (selectedTopupAmountText) {
-                        selectedTopupAmountText.textContent = `Selected: ₹${amount}`;
+                        selectedTopupAmountText.textContent = `Selected: ₹${newAmount}`;
                     }
                     
                     // Highlight the selected button
-                    topupButtons.forEach(btn => {
-                        btn.classList.remove('bg-blue-200', 'text-blue-800');
-                        btn.classList.add('bg-gray-200', 'text-gray-800');
-                    });
                     button.classList.remove('bg-gray-200', 'text-gray-800');
                     button.classList.add('bg-blue-200', 'text-blue-800');
+                    
+                    // After a short delay, reset the button highlight
+                    setTimeout(() => {
+                        button.classList.remove('bg-blue-200', 'text-blue-800');
+                        button.classList.add('bg-gray-200', 'text-gray-800');
+                    }, 300);
                 });
             });
         }
@@ -113,19 +135,47 @@ class CardOperationsHandler {
         this.loadCards();
     }
 
+    // Helper method to get cookie by name
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     async loadCards() {
         try {
+            console.log('Loading cards...');
+            
+            // Get the CSRF token from the cookie
+            const csrftoken = this.getCookie('csrftoken');
+            // Get the access token from localStorage
+            const accessToken = localStorage.getItem('access_token');
+            
             const response = await fetch('/api/cards/', {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                credentials: 'same-origin' // Include cookies in the request
             });
 
             if (!response.ok) {
-                throw new Error('Failed to load cards');
+                throw new Error(`Failed to load cards: ${response.status} ${response.statusText}`);
             }
 
             const cards = await response.json();
+            console.log('Cards loaded:', cards);
             
             // Populate card select dropdown
             if (this.cardSelect) {
@@ -146,7 +196,7 @@ class CardOperationsHandler {
                 }
 
                 this.cardList.innerHTML = cards.map(card => `
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
                         <div class="flex justify-between items-center">
                             <div>
                                 <h4 class="text-lg font-medium text-gray-900">${card.card_id}</h4>
@@ -165,7 +215,7 @@ class CardOperationsHandler {
                                 </p>
                             </div>
                             <div>
-                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors topup-btn" data-card-id="${card.id}">
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors card-topup-btn" data-card-id="${card.id}">
                                     Top-up
                                 </button>
                             </div>
@@ -174,7 +224,7 @@ class CardOperationsHandler {
                 `).join('');
 
                 // Add event listeners to top-up buttons
-                document.querySelectorAll('.topup-btn').forEach(button => {
+                document.querySelectorAll('.card-topup-btn').forEach(button => {
                     button.addEventListener('click', () => {
                         const cardId = button.getAttribute('data-card-id');
                         if (this.cardSelect) {
@@ -187,6 +237,9 @@ class CardOperationsHandler {
             }
         } catch (error) {
             console.error('Error loading cards:', error);
+            if (this.cardList) {
+                this.cardList.innerHTML = `<p class="text-red-500 text-center py-4">Error loading cards: ${error.message}</p>`;
+            }
             this.showStatus('Failed to load cards: ' + error.message, 'error');
         }
     }
@@ -195,32 +248,68 @@ class CardOperationsHandler {
         try {
             // Check if Web NFC API is available
             if (!('NDEFReader' in window)) {
-                throw new Error('NFC is not supported on this device or browser');
+                this.handleNfcScanFallback();
+                return;
             }
 
             this.showStatus('Waiting for NFC card...', 'info');
             
-            const reader = new NDEFReader();
-            await reader.scan();
+            try {
+                const reader = new NDEFReader();
+                await reader.scan();
 
-            reader.onreading = ({ message, serialNumber }) => {
-                this.nfcCardId = serialNumber;
-                this.showStatus(`NFC card scanned successfully! Card ID: ${serialNumber}`, 'success');
+                reader.onreading = ({ message, serialNumber }) => {
+                    this.nfcCardId = serialNumber;
+                    this.showStatus(`NFC card scanned successfully! Card ID: ${serialNumber}`, 'success');
+                    
+                    // Update the hidden input field with the NFC card ID
+                    const nfcCardIdInput = document.getElementById('nfcCardId');
+                    if (nfcCardIdInput) {
+                        nfcCardIdInput.value = serialNumber;
+                    }
+                    
+                    reader.stop();
+                };
+
+                reader.onreadingerror = (event) => {
+                    console.error('Reading error:', event);
+                    this.showStatus('Error reading NFC card. Please try again.', 'error');
+                };
+            } catch (nfcError) {
+                console.error('NFC error:', nfcError);
                 
-                // Update the hidden input field with the NFC card ID
-                const nfcCardIdInput = document.getElementById('nfcCardId');
-                if (nfcCardIdInput) {
-                    nfcCardIdInput.value = serialNumber;
+                // Check if the error is due to user permissions
+                if (nfcError.name === 'NotAllowedError') {
+                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
+                } else if (nfcError.name === 'NotSupportedError') {
+                    this.showStatus('NFC is not supported on this device or browser.', 'error');
+                    this.handleNfcScanFallback();
+                } else {
+                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
+                    this.handleNfcScanFallback();
                 }
-                
-                reader.stop();
-            };
-
-            reader.onreadingerror = () => {
-                this.showStatus('Error reading NFC card', 'error');
-            };
+            }
         } catch (error) {
+            console.error('General error:', error);
             this.showStatus(`Error: ${error.message}`, 'error');
+        }
+    }
+    
+    handleNfcScanFallback() {
+        // Create a modal or form for manual card ID entry
+        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
+        
+        if (cardIdInput && cardIdInput.trim() !== '') {
+            this.nfcCardId = cardIdInput;
+            this.showStatus(`Card ID entered manually: ${cardIdInput}`, 'success');
+            
+            // Update the hidden input field with the manually entered card ID
+            const nfcCardIdInput = document.getElementById('nfcCardId');
+            if (nfcCardIdInput) {
+                nfcCardIdInput.value = cardIdInput;
+            }
+        } else {
+            this.showStatus('Card ID entry cancelled', 'info');
         }
     }
 
@@ -228,55 +317,94 @@ class CardOperationsHandler {
         try {
             // Check if Web NFC API is available
             if (!('NDEFReader' in window)) {
-                throw new Error('NFC is not supported on this device or browser');
+                this.handleTopupScanFallback();
+                return;
             }
 
             this.showStatus('Waiting for NFC card...', 'info');
             
-            const reader = new NDEFReader();
-            await reader.scan();
+            try {
+                const reader = new NDEFReader();
+                await reader.scan();
 
-            reader.onreading = async ({ message, serialNumber }) => {
-                this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
+                reader.onreading = async ({ message, serialNumber }) => {
+                    this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
+                    
+                    try {
+                        await this.findAndSelectCard(serialNumber);
+                    } catch (error) {
+                        this.showStatus(`Error finding card: ${error.message}`, 'error');
+                    }
+                    
+                    reader.stop();
+                };
+
+                reader.onreadingerror = (event) => {
+                    console.error('Reading error:', event);
+                    this.showStatus('Error reading NFC card. Please try again.', 'error');
+                };
+            } catch (nfcError) {
+                console.error('NFC error:', nfcError);
                 
-                try {
-                    // Find the card by secure key (NFC ID)
-                    const response = await fetch('/api/cards/', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load cards');
-                    }
-                    
-                    const cards = await response.json();
-                    const matchingCard = cards.find(card => card.secure_key === serialNumber);
-                    
-                    if (matchingCard) {
-                        // Select the card in the dropdown
-                        if (this.cardSelect) {
-                            this.cardSelect.value = matchingCard.id;
-                            this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
-                        } else {
-                            this.showStatus('Card select dropdown not found', 'error');
-                        }
-                    } else {
-                        this.showStatus('No matching card found for this NFC tag', 'error');
-                    }
-                } catch (error) {
-                    this.showStatus(`Error finding card: ${error.message}`, 'error');
+                // Check if the error is due to user permissions
+                if (nfcError.name === 'NotAllowedError') {
+                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
+                } else if (nfcError.name === 'NotSupportedError') {
+                    this.showStatus('NFC is not supported on this device or browser.', 'error');
+                    this.handleTopupScanFallback();
+                } else {
+                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
+                    this.handleTopupScanFallback();
                 }
-                
-                reader.stop();
-            };
-
-            reader.onreadingerror = () => {
-                this.showStatus('Error reading NFC card', 'error');
-            };
+            }
         } catch (error) {
+            console.error('General error:', error);
             this.showStatus(`Error: ${error.message}`, 'error');
+        }
+    }
+    
+    async findAndSelectCard(cardId) {
+        // Find the card by secure key (NFC ID)
+        const response = await fetch('/api/cards/', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load cards');
+        }
+        
+        const cards = await response.json();
+        const matchingCard = cards.find(card => card.secure_key === cardId);
+        
+        if (matchingCard) {
+            // Select the card in the dropdown
+            if (this.cardSelect) {
+                this.cardSelect.value = matchingCard.id;
+                this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
+            } else {
+                this.showStatus('Card select dropdown not found', 'error');
+            }
+        } else {
+            this.showStatus('No matching card found for this NFC tag', 'error');
+        }
+    }
+    
+    handleTopupScanFallback() {
+        // Create a modal or form for manual card ID entry
+        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
+        
+        if (cardIdInput && cardIdInput.trim() !== '') {
+            this.showStatus(`Looking up card with ID: ${cardIdInput}...`, 'info');
+            
+            // Find and select the card with the manually entered ID
+            this.findAndSelectCard(cardIdInput)
+                .catch(error => {
+                    this.showStatus(`Error finding card: ${error.message}`, 'error');
+                });
+        } else {
+            this.showStatus('Card ID entry cancelled', 'info');
         }
     }
 
@@ -303,6 +431,8 @@ class CardOperationsHandler {
                 return;
             }
 
+            this.showStatus('Issuing card...', 'info');
+
             const response = await fetch('/api/cards/issue/', {
                 method: 'POST',
                 headers: {
@@ -323,7 +453,24 @@ class CardOperationsHandler {
             if (response.ok) {
                 this.showStatus(`Card issued successfully! Card ID: ${result.card_id}`, 'success');
                 this.issueCardForm.reset();
-                this.loadCards(); // Refresh card list
+                
+                // Reset the selected balance text
+                const selectedBalanceText = document.getElementById('selectedBalance');
+                if (selectedBalanceText) {
+                    selectedBalanceText.textContent = 'Selected: ₹0';
+                }
+                
+                // Clear the NFC card ID
+                this.nfcCardId = null;
+                const nfcCardIdInput = document.getElementById('nfcCardId');
+                if (nfcCardIdInput) {
+                    nfcCardIdInput.value = '';
+                }
+                
+                // Refresh card list with a slight delay to ensure the API has updated
+                setTimeout(() => {
+                    this.loadCards();
+                }, 500);
             } else {
                 throw new Error(result.error || 'Failed to issue card');
             }
@@ -348,6 +495,8 @@ class CardOperationsHandler {
                 return;
             }
 
+            this.showStatus('Processing top-up...', 'info');
+
             const response = await fetch(`/api/cards/${cardId}/topup/`, {
                 method: 'POST',
                 headers: {
@@ -364,7 +513,17 @@ class CardOperationsHandler {
             if (response.ok) {
                 this.showStatus(`Top-up successful! New balance: ₹${result.new_balance}`, 'success');
                 this.topupForm.reset();
-                this.loadCards(); // Refresh card list
+                
+                // Reset the selected topup amount text
+                const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+                if (selectedTopupAmountText) {
+                    selectedTopupAmountText.textContent = 'Selected: ₹0';
+                }
+                
+                // Refresh card list with a slight delay to ensure the API has updated
+                setTimeout(() => {
+                    this.loadCards();
+                }, 500);
             } else {
                 throw new Error(result.error || 'Failed to top-up card');
             }

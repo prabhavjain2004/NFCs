@@ -23,27 +23,35 @@ class NFCPaymentHandler {
         if (paymentButtons.length > 0) {
             paymentButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    const amount = button.getAttribute('data-amount');
+                    const clickedAmount = parseInt(button.getAttribute('data-amount'));
                     const paymentAmountInput = document.getElementById('paymentAmount');
                     const selectedPaymentAmountText = document.getElementById('selectedPaymentAmount');
                     
+                    // Get current amount or default to 0
+                    let currentAmount = paymentAmountInput ? parseInt(paymentAmountInput.value) || 0 : 0;
+                    
+                    // Add the clicked amount to the current amount
+                    const newAmount = currentAmount + clickedAmount;
+                    
                     // Update the hidden input value
                     if (paymentAmountInput) {
-                        paymentAmountInput.value = amount;
+                        paymentAmountInput.value = newAmount;
                     }
                     
                     // Update the selected amount text
                     if (selectedPaymentAmountText) {
-                        selectedPaymentAmountText.textContent = `Selected: ₹${amount}`;
+                        selectedPaymentAmountText.textContent = `Selected: ₹${newAmount}`;
                     }
                     
                     // Highlight the selected button
-                    paymentButtons.forEach(btn => {
-                        btn.classList.remove('bg-blue-200', 'text-blue-800');
-                        btn.classList.add('bg-gray-200', 'text-gray-800');
-                    });
                     button.classList.remove('bg-gray-200', 'text-gray-800');
                     button.classList.add('bg-blue-200', 'text-blue-800');
+                    
+                    // After a short delay, reset the button highlight
+                    setTimeout(() => {
+                        button.classList.remove('bg-blue-200', 'text-blue-800');
+                        button.classList.add('bg-gray-200', 'text-gray-800');
+                    }, 300);
                 });
             });
         }
@@ -69,56 +77,126 @@ class NFCPaymentHandler {
         try {
             // Check if Web NFC API is available
             if (!('NDEFReader' in window)) {
-                throw new Error('NFC is not supported on this device or browser');
+                // Fallback for browsers without NFC support
+                this.handleNfcFallback(amount, description);
+                return;
             }
 
-            const reader = new NDEFReader();
-            await reader.scan();
-
-            reader.onreading = async ({ message, serialNumber }) => {
-                try {
-                    // Process the payment with the card data
-                    const response = await fetch('/api/transactions/payment/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                        },
-                        body: JSON.stringify({
-                            secure_key: serialNumber, // In a real app, this would be properly secured
-                            amount: amount,
-                            description: description
-                        })
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        this.showStatus(`Payment successful! New balance: ₹${result.new_balance}`, 'success');
-                        this.paymentForm.reset();
+            try {
+                const reader = new NDEFReader();
+                await reader.scan();
+                
+                reader.onreading = async ({ message, serialNumber }) => {
+                    try {
+                        this.showStatus('Card detected! Processing payment...', 'info');
                         
-                        // Refresh the page after 2 seconds to update dashboard data
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    } else {
-                        throw new Error(result.error || 'Payment failed');
+                        // Process the payment with the card data
+                        const response = await fetch('/api/transactions/payment/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                            },
+                            body: JSON.stringify({
+                                secure_key: serialNumber, // In a real app, this would be properly secured
+                                amount: amount,
+                                description: description
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            this.showStatus(`Payment successful! New balance: ₹${result.new_balance}`, 'success');
+                            this.paymentForm.reset();
+                            
+                            // Refresh the page after 2 seconds to update dashboard data
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        } else {
+                            throw new Error(result.error || 'Payment failed');
+                        }
+                    } catch (error) {
+                        this.showStatus(`Payment failed: ${error.message}`, 'error');
+                    } finally {
+                        reader.stop();
+                        this.isProcessing = false;
                     }
-                } catch (error) {
-                    this.showStatus(`Payment failed: ${error.message}`, 'error');
-                } finally {
-                    reader.stop();
+                };
+
+                reader.onreadingerror = (event) => {
+                    console.error('Reading error:', event);
+                    this.showStatus('Error reading NFC card. Please try again.', 'error');
                     this.isProcessing = false;
+                };
+            } catch (nfcError) {
+                console.error('NFC error:', nfcError);
+                
+                // Check if the error is due to user permissions
+                if (nfcError.name === 'NotAllowedError') {
+                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
+                } else if (nfcError.name === 'NotSupportedError') {
+                    this.showStatus('NFC is not supported on this device or browser.', 'error');
+                    // Offer fallback
+                    this.handleNfcFallback(amount, description);
+                } else {
+                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
+                    // Offer fallback
+                    this.handleNfcFallback(amount, description);
                 }
-            };
-
-            reader.onreadingerror = () => {
-                this.showStatus('Error reading NFC card', 'error');
+                
                 this.isProcessing = false;
-            };
-
+            }
         } catch (error) {
+            console.error('General error:', error);
             this.showStatus(`Error: ${error.message}`, 'error');
+            this.isProcessing = false;
+        }
+    }
+    
+    handleNfcFallback(amount, description) {
+        // Create a modal or form for manual card ID entry
+        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
+        
+        if (cardIdInput) {
+            this.showStatus('Processing manual payment...', 'info');
+            
+            // Process the payment with the manually entered card ID
+            fetch('/api/transactions/payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    secure_key: cardIdInput,
+                    amount: amount,
+                    description: description
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                this.showStatus(`Payment successful! New balance: ₹${result.new_balance}`, 'success');
+                this.paymentForm.reset();
+                
+                // Refresh the page after 2 seconds to update dashboard data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            })
+            .catch(error => {
+                this.showStatus(`Payment failed: ${error.message}`, 'error');
+            })
+            .finally(() => {
+                this.isProcessing = false;
+            });
+        } else {
+            this.showStatus('Payment cancelled', 'info');
             this.isProcessing = false;
         }
     }
