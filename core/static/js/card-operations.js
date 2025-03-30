@@ -7,10 +7,11 @@ class CardOperationsHandler {
         this.issueCardForm = document.getElementById('issueCardForm');
         this.topupForm = document.getElementById('topupForm');
         this.operationStatus = document.getElementById('operationStatus');
-        this.cardSelect = document.getElementById('cardSelect');
         this.cardList = document.getElementById('cardList');
-        this.scanCardBtn = document.getElementById('scanCardBtn');
         this.nfcCardId = null;
+        this.isProcessing = false;
+        this.currentOperation = null; // To track which operation is in progress
+        this.secondScanPending = false; // Flag to track if we're waiting for a second scan
         
         // Initialize immediately
         this.initialize();
@@ -22,36 +23,91 @@ class CardOperationsHandler {
     }
 
     initialize() {
-        // Initialize issue card form
-        if (this.issueCardForm) {
-            this.issueCardForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.issueCard();
+        // Card Issuance Button
+        const cardIssuanceBtn = document.getElementById('cardIssuanceBtn');
+        if (cardIssuanceBtn) {
+            cardIssuanceBtn.addEventListener('click', () => {
+                this.showOperationForm('cardIssuance');
             });
         }
-
-        // Initialize scan card buttons
-        if (this.scanCardBtn) {
-            this.scanCardBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.scanNfcCard();
+        
+        // Top-up Button
+        const topupCardBtn = document.getElementById('topupCardBtn');
+        if (topupCardBtn) {
+            topupCardBtn.addEventListener('click', () => {
+                this.showOperationForm('topup');
             });
         }
-
-        // Initialize scan topup card button
+        
+        // Balance Inquiry Button
+        const balanceInquiryBtn = document.getElementById('balanceInquiryBtn');
+        if (balanceInquiryBtn) {
+            balanceInquiryBtn.addEventListener('click', () => {
+                this.showOperationForm('balanceInquiry');
+            });
+        }
+        
+        // Scan New Card Button (for issuance)
+        const scanNewCardBtn = document.getElementById('scanNewCardBtn');
+        if (scanNewCardBtn) {
+            scanNewCardBtn.addEventListener('click', () => {
+                this.scanNfcCard('issuance');
+            });
+        }
+        
+        // Scan Card Button (for top-up)
         const scanTopupCardBtn = document.getElementById('scanTopupCardBtn');
         if (scanTopupCardBtn) {
-            scanTopupCardBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.scanTopupCard();
+            scanTopupCardBtn.addEventListener('click', () => {
+                this.scanNfcCard('topup');
             });
         }
-
-        // Initialize top-up form
-        if (this.topupForm) {
-            this.topupForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.topupCard();
+        
+        // Scan Card Button (for balance inquiry)
+        const scanBalanceCardBtn = document.getElementById('scanBalanceCardBtn');
+        if (scanBalanceCardBtn) {
+            scanBalanceCardBtn.addEventListener('click', () => {
+                this.scanNfcCard('balance');
+            });
+        }
+        
+        // Confirm Issuance Button
+        const confirmIssuanceBtn = document.getElementById('confirmIssuanceBtn');
+        if (confirmIssuanceBtn) {
+            confirmIssuanceBtn.addEventListener('click', () => {
+                this.confirmIssuance();
+            });
+        }
+        
+        // Confirm Top-up Button
+        const confirmTopupBtn = document.getElementById('confirmTopupBtn');
+        if (confirmTopupBtn) {
+            confirmTopupBtn.addEventListener('click', () => {
+                this.confirmTopup();
+            });
+        }
+        
+        // Cancel Issuance Button
+        const cancelIssuanceBtn = document.getElementById('cancelIssuanceBtn');
+        if (cancelIssuanceBtn) {
+            cancelIssuanceBtn.addEventListener('click', () => {
+                this.cancelOperation();
+            });
+        }
+        
+        // Cancel Top-up Button
+        const cancelTopupBtn = document.getElementById('cancelTopupBtn');
+        if (cancelTopupBtn) {
+            cancelTopupBtn.addEventListener('click', () => {
+                this.cancelOperation();
+            });
+        }
+        
+        // Close Balance Button
+        const closeBalanceBtn = document.getElementById('closeBalanceBtn');
+        if (closeBalanceBtn) {
+            closeBalanceBtn.addEventListener('click', () => {
+                this.cancelOperation();
             });
         }
 
@@ -148,9 +204,503 @@ class CardOperationsHandler {
                 });
             });
         }
+    }
 
-        // Load cards for dropdown and list
-        this.loadCards();
+    /**
+     * Show the appropriate operation form and hide others
+     */
+    showOperationForm(operation) {
+        // Hide all operation forms first
+        document.getElementById('cardIssuanceForm').classList.add('hidden');
+        document.getElementById('topupFormContainer').classList.add('hidden');
+        document.getElementById('balanceInquiryForm').classList.add('hidden');
+        
+        // Reset any previous operation
+        this.cancelOperation();
+        
+        // Show the selected operation form
+        if (operation === 'cardIssuance') {
+            document.getElementById('cardIssuanceForm').classList.remove('hidden');
+            document.getElementById('issuanceStep1').classList.remove('hidden');
+            document.getElementById('issuanceStep2').classList.add('hidden');
+            this.currentOperation = 'issuance';
+        } else if (operation === 'topup') {
+            document.getElementById('topupFormContainer').classList.remove('hidden');
+            document.getElementById('topupStep1').classList.remove('hidden');
+            document.getElementById('topupStep2').classList.add('hidden');
+            this.currentOperation = 'topup';
+        } else if (operation === 'balanceInquiry') {
+            document.getElementById('balanceInquiryForm').classList.remove('hidden');
+            document.getElementById('balanceResult').classList.add('hidden');
+            this.currentOperation = 'balance';
+        }
+        
+        // Scroll to the form
+        document.getElementById('operationForms').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    /**
+     * Cancel the current operation and reset the forms
+     */
+    cancelOperation() {
+        // Reset forms
+        if (this.issueCardForm) {
+            this.issueCardForm.reset();
+        }
+        if (this.topupForm) {
+            this.topupForm.reset();
+        }
+        
+        // Reset selected amounts
+        const selectedBalanceText = document.getElementById('selectedBalance');
+        if (selectedBalanceText) {
+            selectedBalanceText.textContent = 'Selected: ₹0';
+        }
+        
+        const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+        if (selectedTopupAmountText) {
+            selectedTopupAmountText.textContent = 'Selected: ₹0';
+        }
+        
+        // Reset hidden inputs
+        const initialBalanceInput = document.getElementById('initialBalance');
+        if (initialBalanceInput) {
+            initialBalanceInput.value = '0';
+        }
+        
+        const topupAmountInput = document.getElementById('topupAmount');
+        if (topupAmountInput) {
+            topupAmountInput.value = '0';
+        }
+        
+        const nfcCardIdInput = document.getElementById('nfcCardId');
+        if (nfcCardIdInput) {
+            nfcCardIdInput.value = '';
+        }
+        
+        const topupCardIdInput = document.getElementById('topupCardId');
+        if (topupCardIdInput) {
+            topupCardIdInput.value = '';
+        }
+        
+        // Reset operation state
+        this.nfcCardId = null;
+        this.isProcessing = false;
+        this.secondScanPending = false;
+        
+        // Hide all operation forms
+        document.getElementById('cardIssuanceForm').classList.add('hidden');
+        document.getElementById('topupFormContainer').classList.add('hidden');
+        document.getElementById('balanceInquiryForm').classList.add('hidden');
+        
+        // Hide status message
+        if (this.operationStatus) {
+            this.operationStatus.classList.add('hidden');
+        }
+    }
+    
+    /**
+     * Scan NFC card for different operations
+     */
+    async scanNfcCard(operation) {
+        if (this.isProcessing) {
+            this.showStatus('A scan is already in progress', 'error');
+            return;
+        }
+        
+        this.isProcessing = true;
+        
+        try {
+            // Check if Web NFC API is available
+            if (!('NDEFReader' in window)) {
+                console.log('Web NFC API not available');
+                this.handleNfcScanFallback(operation);
+                return;
+            }
+
+            this.showStatus('Waiting for NFC card...', 'info');
+            
+            try {
+                const reader = new NDEFReader();
+                console.log('Requesting NFC permission...');
+                await reader.scan();
+                console.log('NFC permission granted, scanning...');
+
+                reader.onreading = async ({ message, serialNumber }) => {
+                    console.log('NFC card detected:', serialNumber);
+                    
+                    // Handle the scan based on the operation
+                    if (operation === 'issuance') {
+                        if (this.secondScanPending) {
+                            // This is the second scan for issuance confirmation
+                            await this.completeIssuance(serialNumber);
+                        } else {
+                            // This is the first scan for issuance
+                            this.handleIssuanceFirstScan(serialNumber);
+                        }
+                    } else if (operation === 'topup') {
+                        if (this.secondScanPending) {
+                            // This is the second scan for topup confirmation
+                            await this.completeTopup(serialNumber);
+                        } else {
+                            // This is the first scan for topup
+                            await this.handleTopupFirstScan(serialNumber);
+                        }
+                    } else if (operation === 'balance') {
+                        // Balance inquiry scan
+                        await this.handleBalanceInquiry(serialNumber);
+                    }
+                    
+                    reader.stop();
+                    this.isProcessing = false;
+                };
+
+                reader.onreadingerror = (event) => {
+                    console.error('Reading error:', event);
+                    this.showStatus('Error reading NFC card. Please try again.', 'error');
+                    this.isProcessing = false;
+                };
+            } catch (nfcError) {
+                console.error('NFC error:', nfcError);
+                
+                // Check if the error is due to user permissions
+                if (nfcError.name === 'NotAllowedError') {
+                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
+                } else if (nfcError.name === 'NotSupportedError') {
+                    this.showStatus('NFC is not supported on this device or browser.', 'error');
+                    this.handleNfcScanFallback(operation);
+                } else {
+                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
+                    this.handleNfcScanFallback(operation);
+                }
+                this.isProcessing = false;
+            }
+        } catch (error) {
+            console.error('General error:', error);
+            this.showStatus(`Error: ${error.message}`, 'error');
+            this.handleNfcScanFallback(operation);
+            this.isProcessing = false;
+        }
+    }
+    
+    /**
+     * Handle NFC scan fallback for different operations
+     */
+    handleNfcScanFallback(operation) {
+        // Create a modal or form for manual card ID entry
+        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
+        
+        if (cardIdInput && cardIdInput.trim() !== '') {
+            if (operation === 'issuance') {
+                if (this.secondScanPending) {
+                    // Second scan for issuance
+                    this.completeIssuance(cardIdInput);
+                } else {
+                    // First scan for issuance
+                    this.handleIssuanceFirstScan(cardIdInput);
+                }
+            } else if (operation === 'topup') {
+                if (this.secondScanPending) {
+                    // Second scan for topup
+                    this.completeTopup(cardIdInput);
+                } else {
+                    // First scan for topup
+                    this.handleTopupFirstScan(cardIdInput);
+                }
+            } else if (operation === 'balance') {
+                // Balance inquiry
+                this.handleBalanceInquiry(cardIdInput);
+            }
+        } else {
+            this.showStatus('Card ID entry cancelled', 'info');
+            this.isProcessing = false;
+        }
+    }
+    
+    /**
+     * Handle the first scan for card issuance
+     */
+    handleIssuanceFirstScan(cardId) {
+        this.nfcCardId = cardId;
+        this.showStatus(`NFC card scanned successfully! Card ID: ${cardId}`, 'success');
+        
+        // Update the hidden input field with the NFC card ID
+        const nfcCardIdInput = document.getElementById('nfcCardId');
+        if (nfcCardIdInput) {
+            nfcCardIdInput.value = cardId;
+        }
+        
+        // Show the second step of the issuance form
+        document.getElementById('issuanceStep1').classList.add('hidden');
+        document.getElementById('issuanceStep2').classList.remove('hidden');
+    }
+    
+    /**
+     * Prepare for the second scan to confirm issuance
+     */
+    confirmIssuance() {
+        const customerName = document.getElementById('customerName').value;
+        const customerMobile = document.getElementById('customerMobile').value;
+        const initialBalance = document.getElementById('initialBalance').value;
+        
+        if (!customerName || !customerMobile) {
+            this.showStatus('Please enter customer name and mobile number', 'error');
+            return;
+        }
+        
+        if (!initialBalance || initialBalance === '0') {
+            this.showStatus('Please select an initial balance amount', 'error');
+            return;
+        }
+        
+        this.secondScanPending = true;
+        this.showStatus('Please tap the NFC card again to confirm and complete the card issuance.', 'info');
+    }
+    
+    /**
+     * Complete the card issuance after the second scan
+     */
+    async completeIssuance(cardId) {
+        try {
+            const customerName = document.getElementById('customerName').value;
+            const customerMobile = document.getElementById('customerMobile').value;
+            const initialBalance = document.getElementById('initialBalance').value;
+            const userId = document.getElementById('userId').value;
+            const nfcCardId = document.getElementById('nfcCardId').value;
+            
+            // Verify that the second scan matches the first scan
+            if (cardId !== nfcCardId) {
+                this.showStatus('The scanned card does not match the initial card. Please start over.', 'error');
+                this.secondScanPending = false;
+                return;
+            }
+
+            this.showStatus('Issuing card...', 'info');
+
+            const response = await fetch('/api/cards/issue/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    customer_name: customerName,
+                    customer_mobile: customerMobile,
+                    initial_balance: initialBalance,
+                    user_id: userId,
+                    nfc_card_id: nfcCardId
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showStatus(`Card issued successfully! Card ID: ${result.card_id}`, 'success');
+                
+                // Reset the form and state
+                this.secondScanPending = false;
+                
+                // Reset the selected balance text
+                const selectedBalanceText = document.getElementById('selectedBalance');
+                if (selectedBalanceText) {
+                    selectedBalanceText.textContent = 'Selected: ₹0';
+                }
+                
+                // Hide the form after a delay
+                setTimeout(() => {
+                    document.getElementById('cardIssuanceForm').classList.add('hidden');
+                    
+                    // Refresh card list
+                    this.loadCards();
+                }, 2000);
+            } else {
+                throw new Error(result.error || 'Failed to issue card');
+            }
+        } catch (error) {
+            console.error('Error issuing card:', error);
+            this.showStatus('Failed to issue card: ' + error.message, 'error');
+            this.secondScanPending = false;
+        }
+    }
+    
+    /**
+     * Handle the first scan for card top-up
+     */
+    async handleTopupFirstScan(cardId) {
+        try {
+            this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
+            
+            // Find the card by secure key (NFC ID)
+            const response = await fetch('/api/cards/', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load cards');
+            }
+            
+            const cards = await response.json();
+            const matchingCard = cards.find(card => card.secure_key === cardId);
+            
+            if (matchingCard) {
+                // Store the card ID for the second scan
+                const topupCardIdInput = document.getElementById('topupCardId');
+                if (topupCardIdInput) {
+                    topupCardIdInput.value = cardId;
+                }
+                
+                // Display card information
+                document.getElementById('cardIdDisplay').querySelector('span').textContent = matchingCard.card_id;
+                document.getElementById('cardCustomerDisplay').querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
+                document.getElementById('cardBalanceDisplay').querySelector('span').textContent = `₹${matchingCard.balance}`;
+                
+                // Show the second step of the top-up form
+                document.getElementById('topupStep1').classList.add('hidden');
+                document.getElementById('topupStep2').classList.remove('hidden');
+                
+                this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
+            } else {
+                this.showStatus('No matching card found for this NFC tag', 'error');
+            }
+        } catch (error) {
+            console.error('Error finding card:', error);
+            this.showStatus(`Error finding card: ${error.message}`, 'error');
+        }
+    }
+    
+    /**
+     * Prepare for the second scan to confirm top-up
+     */
+    confirmTopup() {
+        const topupAmount = document.getElementById('topupAmount').value;
+        
+        if (!topupAmount || topupAmount === '0') {
+            this.showStatus('Please select a top-up amount', 'error');
+            return;
+        }
+        
+        this.secondScanPending = true;
+        this.showStatus('Please tap the NFC card again to confirm and finalize the top-up.', 'info');
+    }
+    
+    /**
+     * Complete the top-up after the second scan
+     */
+    async completeTopup(cardId) {
+        try {
+            const topupAmount = document.getElementById('topupAmount').value;
+            const storedCardId = document.getElementById('topupCardId').value;
+            
+            // Verify that the second scan matches the first scan
+            if (cardId !== storedCardId) {
+                this.showStatus('The scanned card does not match the initial card. Please start over.', 'error');
+                this.secondScanPending = false;
+                return;
+            }
+            
+            this.showStatus('Processing top-up...', 'info');
+            
+            // Find the card by secure key (NFC ID)
+            const cardsResponse = await fetch('/api/cards/', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            
+            if (!cardsResponse.ok) {
+                throw new Error('Failed to load cards');
+            }
+            
+            const cards = await cardsResponse.json();
+            const matchingCard = cards.find(card => card.secure_key === cardId);
+            
+            if (!matchingCard) {
+                throw new Error('Card not found');
+            }
+            
+            // Process the top-up
+            const response = await fetch(`/api/cards/${matchingCard.id}/topup/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    amount: topupAmount
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showStatus(`Top-up successful! New balance: ₹${result.new_balance}`, 'success');
+                
+                // Reset the form and state
+                this.secondScanPending = false;
+                
+                // Reset the selected topup amount text
+                const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+                if (selectedTopupAmountText) {
+                    selectedTopupAmountText.textContent = 'Selected: ₹0';
+                }
+                
+                // Hide the form after a delay
+                setTimeout(() => {
+                    document.getElementById('topupFormContainer').classList.add('hidden');
+                    
+                    // Refresh card list
+                    this.loadCards();
+                }, 2000);
+            } else {
+                throw new Error(result.error || 'Failed to top-up card');
+            }
+        } catch (error) {
+            console.error('Error topping up card:', error);
+            this.showStatus('Failed to top-up card: ' + error.message, 'error');
+            this.secondScanPending = false;
+        }
+    }
+    
+    /**
+     * Handle balance inquiry
+     */
+    async handleBalanceInquiry(cardId) {
+        try {
+            this.showStatus(`NFC card scanned successfully! Looking up balance...`, 'info');
+            
+            // Find the card by secure key (NFC ID)
+            const response = await fetch('/api/cards/', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load cards');
+            }
+            
+            const cards = await response.json();
+            const matchingCard = cards.find(card => card.secure_key === cardId);
+            
+            if (matchingCard) {
+                // Display balance information
+                document.getElementById('balanceCardId').querySelector('span').textContent = matchingCard.card_id;
+                document.getElementById('balanceCustomerName').querySelector('span').textContent = matchingCard.customer_name || 'Unknown';
+                document.getElementById('balanceAmount').textContent = matchingCard.balance;
+                
+                // Show the balance result
+                document.getElementById('balanceResult').classList.remove('hidden');
+                
+                this.showStatus(`Balance inquiry successful!`, 'success');
+            } else {
+                this.showStatus('No matching card found for this NFC tag', 'error');
+            }
+        } catch (error) {
+            console.error('Error checking balance:', error);
+            this.showStatus(`Error checking balance: ${error.message}`, 'error');
+        }
     }
 
     // Helper method to get cookie by name
@@ -194,17 +744,6 @@ class CardOperationsHandler {
 
             const cards = await response.json();
             console.log('Cards loaded:', cards);
-            
-            // Populate card select dropdown
-            if (this.cardSelect) {
-                this.cardSelect.innerHTML = '<option value="">Select a card</option>';
-                cards.forEach(card => {
-                    const option = document.createElement('option');
-                    option.value = card.id;
-                    option.textContent = `${card.card_id} - ${card.customer_name || 'Unknown'} - ₹${card.balance}`;
-                    this.cardSelect.appendChild(option);
-                });
-            }
 
             // Populate card list
             if (this.cardList) {
@@ -244,12 +783,8 @@ class CardOperationsHandler {
                 // Add event listeners to top-up buttons
                 document.querySelectorAll('.card-topup-btn').forEach(button => {
                     button.addEventListener('click', () => {
-                        const cardId = button.getAttribute('data-card-id');
-                        if (this.cardSelect) {
-                            this.cardSelect.value = cardId;
-                            // Scroll to top-up form
-                            this.topupForm.scrollIntoView({ behavior: 'smooth' });
-                        }
+                        // Show the top-up form
+                        this.showOperationForm('topup');
                     });
                 });
             }
@@ -259,306 +794,6 @@ class CardOperationsHandler {
                 this.cardList.innerHTML = `<p class="text-red-500 text-center py-4">Error loading cards: ${error.message}</p>`;
             }
             this.showStatus('Failed to load cards: ' + error.message, 'error');
-        }
-    }
-
-    async scanNfcCard() {
-        try {
-            // Check if Web NFC API is available
-            if (!('NDEFReader' in window)) {
-                console.log('Web NFC API not available');
-                this.handleNfcScanFallback();
-                return;
-            }
-
-            this.showStatus('Waiting for NFC card...', 'info');
-            
-            try {
-                const reader = new NDEFReader();
-                console.log('Requesting NFC permission...');
-                await reader.scan();
-                console.log('NFC permission granted, scanning...');
-
-                reader.onreading = ({ message, serialNumber }) => {
-                    console.log('NFC card detected:', serialNumber);
-                    this.nfcCardId = serialNumber;
-                    this.showStatus(`NFC card scanned successfully! Card ID: ${serialNumber}`, 'success');
-                    
-                    // Update the hidden input field with the NFC card ID
-                    const nfcCardIdInput = document.getElementById('nfcCardId');
-                    if (nfcCardIdInput) {
-                        nfcCardIdInput.value = serialNumber;
-                    }
-                    
-                    reader.stop();
-                };
-
-                reader.onreadingerror = (event) => {
-                    console.error('Reading error:', event);
-                    this.showStatus('Error reading NFC card. Please try again.', 'error');
-                };
-            } catch (nfcError) {
-                console.error('NFC error:', nfcError);
-                
-                // Check if the error is due to user permissions
-                if (nfcError.name === 'NotAllowedError') {
-                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
-                } else if (nfcError.name === 'NotSupportedError') {
-                    this.showStatus('NFC is not supported on this device or browser.', 'error');
-                    this.handleNfcScanFallback();
-                } else {
-                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
-                    this.handleNfcScanFallback();
-                }
-            }
-        } catch (error) {
-            console.error('General error:', error);
-            this.showStatus(`Error: ${error.message}`, 'error');
-            this.handleNfcScanFallback();
-        }
-    }
-    
-    handleNfcScanFallback() {
-        // Create a modal or form for manual card ID entry
-        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
-        
-        if (cardIdInput && cardIdInput.trim() !== '') {
-            this.nfcCardId = cardIdInput;
-            this.showStatus(`Card ID entered manually: ${cardIdInput}`, 'success');
-            
-            // Update the hidden input field with the manually entered card ID
-            const nfcCardIdInput = document.getElementById('nfcCardId');
-            if (nfcCardIdInput) {
-                nfcCardIdInput.value = cardIdInput;
-            }
-        } else {
-            this.showStatus('Card ID entry cancelled', 'info');
-        }
-    }
-
-    async scanTopupCard() {
-        try {
-            // Check if Web NFC API is available
-            if (!('NDEFReader' in window)) {
-                console.log('Web NFC API not available for topup scan');
-                this.handleTopupScanFallback();
-                return;
-            }
-
-            this.showStatus('Waiting for NFC card...', 'info');
-            
-            try {
-                const reader = new NDEFReader();
-                console.log('Requesting NFC permission for topup...');
-                await reader.scan();
-                console.log('NFC permission granted for topup, scanning...');
-
-                reader.onreading = async ({ message, serialNumber }) => {
-                    console.log('NFC card detected for topup:', serialNumber);
-                    this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
-                    
-                    try {
-                        await this.findAndSelectCard(serialNumber);
-                    } catch (error) {
-                        console.error('Error finding card:', error);
-                        this.showStatus(`Error finding card: ${error.message}`, 'error');
-                    }
-                    
-                    reader.stop();
-                };
-
-                reader.onreadingerror = (event) => {
-                    console.error('Reading error:', event);
-                    this.showStatus('Error reading NFC card. Please try again.', 'error');
-                };
-            } catch (nfcError) {
-                console.error('NFC error during topup scan:', nfcError);
-                
-                // Check if the error is due to user permissions
-                if (nfcError.name === 'NotAllowedError') {
-                    this.showStatus('NFC permission denied. Please allow NFC access and try again.', 'error');
-                } else if (nfcError.name === 'NotSupportedError') {
-                    this.showStatus('NFC is not supported on this device or browser.', 'error');
-                    this.handleTopupScanFallback();
-                } else {
-                    this.showStatus(`NFC error: ${nfcError.message}. Try manual entry.`, 'error');
-                    this.handleTopupScanFallback();
-                }
-            }
-        } catch (error) {
-            console.error('General error during topup scan:', error);
-            this.showStatus(`Error: ${error.message}`, 'error');
-            this.handleTopupScanFallback();
-        }
-    }
-    
-    async findAndSelectCard(cardId) {
-        // Find the card by secure key (NFC ID)
-        const response = await fetch('/api/cards/', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load cards');
-        }
-        
-        const cards = await response.json();
-        const matchingCard = cards.find(card => card.secure_key === cardId);
-        
-        if (matchingCard) {
-            // Select the card in the dropdown
-            if (this.cardSelect) {
-                this.cardSelect.value = matchingCard.id;
-                this.showStatus(`Card found: ${matchingCard.card_id} - ${matchingCard.customer_name || 'Unknown'}`, 'success');
-            } else {
-                this.showStatus('Card select dropdown not found', 'error');
-            }
-        } else {
-            this.showStatus('No matching card found for this NFC tag', 'error');
-        }
-    }
-    
-    handleTopupScanFallback() {
-        // Create a modal or form for manual card ID entry
-        const cardIdInput = prompt('NFC not available. Please enter the card ID manually:');
-        
-        if (cardIdInput && cardIdInput.trim() !== '') {
-            this.showStatus(`Looking up card with ID: ${cardIdInput}...`, 'info');
-            
-            // Find and select the card with the manually entered ID
-            this.findAndSelectCard(cardIdInput)
-                .catch(error => {
-                    this.showStatus(`Error finding card: ${error.message}`, 'error');
-                });
-        } else {
-            this.showStatus('Card ID entry cancelled', 'info');
-        }
-    }
-
-    async issueCard() {
-        try {
-            const customerName = document.getElementById('customerName').value;
-            const customerMobile = document.getElementById('customerMobile').value;
-            const initialBalance = document.getElementById('initialBalance').value;
-            const userId = document.getElementById('userId').value;
-            const nfcCardId = document.getElementById('nfcCardId')?.value || this.nfcCardId;
-
-            if (!customerName || !customerMobile) {
-                this.showStatus('Please enter customer name and mobile number', 'error');
-                return;
-            }
-
-            if (!nfcCardId) {
-                this.showStatus('Please scan an NFC card first', 'error');
-                return;
-            }
-
-            if (!initialBalance || initialBalance === '0') {
-                this.showStatus('Please select an initial balance amount', 'error');
-                return;
-            }
-
-            this.showStatus('Issuing card...', 'info');
-
-            const response = await fetch('/api/cards/issue/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({
-                    customer_name: customerName,
-                    customer_mobile: customerMobile,
-                    initial_balance: initialBalance,
-                    user_id: userId,
-                    nfc_card_id: nfcCardId
-                })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                this.showStatus(`Card issued successfully! Card ID: ${result.card_id}`, 'success');
-                this.issueCardForm.reset();
-                
-                // Reset the selected balance text
-                const selectedBalanceText = document.getElementById('selectedBalance');
-                if (selectedBalanceText) {
-                    selectedBalanceText.textContent = 'Selected: ₹0';
-                }
-                
-                // Clear the NFC card ID
-                this.nfcCardId = null;
-                const nfcCardIdInput = document.getElementById('nfcCardId');
-                if (nfcCardIdInput) {
-                    nfcCardIdInput.value = '';
-                }
-                
-                // Refresh card list with a slight delay to ensure the API has updated
-                setTimeout(() => {
-                    this.loadCards();
-                }, 500);
-            } else {
-                throw new Error(result.error || 'Failed to issue card');
-            }
-        } catch (error) {
-            console.error('Error issuing card:', error);
-            this.showStatus('Failed to issue card: ' + error.message, 'error');
-        }
-    }
-
-    async topupCard() {
-        try {
-            const cardId = this.cardSelect.value;
-            const amount = document.getElementById('topupAmount').value;
-
-            if (!cardId) {
-                this.showStatus('Please select a card', 'error');
-                return;
-            }
-
-            if (!amount || amount === '0') {
-                this.showStatus('Please select a top-up amount', 'error');
-                return;
-            }
-
-            this.showStatus('Processing top-up...', 'info');
-
-            const response = await fetch(`/api/cards/${cardId}/topup/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({
-                    amount: amount
-                })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                this.showStatus(`Top-up successful! New balance: ₹${result.new_balance}`, 'success');
-                this.topupForm.reset();
-                
-                // Reset the selected topup amount text
-                const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
-                if (selectedTopupAmountText) {
-                    selectedTopupAmountText.textContent = 'Selected: ₹0';
-                }
-                
-                // Refresh card list with a slight delay to ensure the API has updated
-                setTimeout(() => {
-                    this.loadCards();
-                }, 500);
-            } else {
-                throw new Error(result.error || 'Failed to top-up card');
-            }
-        } catch (error) {
-            console.error('Error topping up card:', error);
-            this.showStatus('Failed to top-up card: ' + error.message, 'error');
         }
     }
 
