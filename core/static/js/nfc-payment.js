@@ -17,6 +17,36 @@ class NFCPaymentHandler {
                 this.processPayment();
             });
         }
+
+        // Initialize payment amount buttons
+        const paymentButtons = document.querySelectorAll('.payment-btn');
+        if (paymentButtons.length > 0) {
+            paymentButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = button.getAttribute('data-amount');
+                    const paymentAmountInput = document.getElementById('paymentAmount');
+                    const selectedPaymentAmountText = document.getElementById('selectedPaymentAmount');
+                    
+                    // Update the hidden input value
+                    if (paymentAmountInput) {
+                        paymentAmountInput.value = amount;
+                    }
+                    
+                    // Update the selected amount text
+                    if (selectedPaymentAmountText) {
+                        selectedPaymentAmountText.textContent = `Selected: ₹${amount}`;
+                    }
+                    
+                    // Highlight the selected button
+                    paymentButtons.forEach(btn => {
+                        btn.classList.remove('bg-blue-200', 'text-blue-800');
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    });
+                    button.classList.remove('bg-gray-200', 'text-gray-800');
+                    button.classList.add('bg-blue-200', 'text-blue-800');
+                });
+            });
+        }
     }
 
     async processPayment() {
@@ -25,11 +55,11 @@ class NFCPaymentHandler {
             return;
         }
 
-        const amount = parseFloat(document.getElementById('paymentAmount').value);
+        const amount = document.getElementById('paymentAmount').value;
         const description = document.getElementById('paymentDescription').value || 'Payment transaction';
 
-        if (isNaN(amount) || amount <= 0) {
-            this.showStatus('Please enter a valid amount', 'error');
+        if (!amount || amount === '0') {
+            this.showStatus('Please select a payment amount', 'error');
             return;
         }
 

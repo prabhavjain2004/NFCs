@@ -49,6 +49,66 @@ class CardOperationsHandler {
             });
         }
 
+        // Initialize balance buttons
+        const balanceButtons = document.querySelectorAll('.balance-btn');
+        if (balanceButtons.length > 0) {
+            balanceButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = button.getAttribute('data-amount');
+                    const initialBalanceInput = document.getElementById('initialBalance');
+                    const selectedBalanceText = document.getElementById('selectedBalance');
+                    
+                    // Update the hidden input value
+                    if (initialBalanceInput) {
+                        initialBalanceInput.value = amount;
+                    }
+                    
+                    // Update the selected amount text
+                    if (selectedBalanceText) {
+                        selectedBalanceText.textContent = `Selected: ₹${amount}`;
+                    }
+                    
+                    // Highlight the selected button
+                    balanceButtons.forEach(btn => {
+                        btn.classList.remove('bg-blue-200', 'text-blue-800');
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    });
+                    button.classList.remove('bg-gray-200', 'text-gray-800');
+                    button.classList.add('bg-blue-200', 'text-blue-800');
+                });
+            });
+        }
+
+        // Initialize topup buttons
+        const topupButtons = document.querySelectorAll('.topup-btn');
+        if (topupButtons.length > 0) {
+            topupButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const amount = button.getAttribute('data-amount');
+                    const topupAmountInput = document.getElementById('topupAmount');
+                    const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
+                    
+                    // Update the hidden input value
+                    if (topupAmountInput) {
+                        topupAmountInput.value = amount;
+                    }
+                    
+                    // Update the selected amount text
+                    if (selectedTopupAmountText) {
+                        selectedTopupAmountText.textContent = `Selected: ₹${amount}`;
+                    }
+                    
+                    // Highlight the selected button
+                    topupButtons.forEach(btn => {
+                        btn.classList.remove('bg-blue-200', 'text-blue-800');
+                        btn.classList.add('bg-gray-200', 'text-gray-800');
+                    });
+                    button.classList.remove('bg-gray-200', 'text-gray-800');
+                    button.classList.add('bg-blue-200', 'text-blue-800');
+                });
+            });
+        }
+
         // Load cards for dropdown and list
         this.loadCards();
     }
@@ -238,6 +298,11 @@ class CardOperationsHandler {
                 return;
             }
 
+            if (!initialBalance || initialBalance === '0') {
+                this.showStatus('Please select an initial balance amount', 'error');
+                return;
+            }
+
             const response = await fetch('/api/cards/issue/', {
                 method: 'POST',
                 headers: {
@@ -278,8 +343,8 @@ class CardOperationsHandler {
                 return;
             }
 
-            if (!amount || parseFloat(amount) <= 0) {
-                this.showStatus('Please enter a valid amount', 'error');
+            if (!amount || amount === '0') {
+                this.showStatus('Please select a top-up amount', 'error');
                 return;
             }
 

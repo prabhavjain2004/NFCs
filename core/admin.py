@@ -55,8 +55,12 @@ admin.site.register(User, CustomUserAdmin)
 
 @admin.register(Outlet)
 class OutletAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'user')
-    search_fields = ('name', 'address')
+    list_display = ('name', 'address', 'business_type', 'user')
+    search_fields = ('name', 'address', 'business_type')
+    fieldsets = (
+        (None, {'fields': ('user', 'name', 'address', 'business_type', 'tax_id')}),
+        ('Additional Information', {'fields': ('description', 'active')}),
+    )
 
 @admin.register(Card)
 class CardAdmin(admin.ModelAdmin):

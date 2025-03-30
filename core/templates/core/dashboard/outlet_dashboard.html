@@ -141,9 +141,23 @@
             <div class="p-6">
                 <form id="paymentForm" class="space-y-4">
                     <div>
-                        <label for="paymentAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
-                        <input type="number" id="paymentAmount" min="1" step="0.01" required
-                               class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
+                        <input type="hidden" id="paymentAmount" value="0">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" class="payment-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="50">
+                                ₹50
+                            </button>
+                            <button type="button" class="payment-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="100">
+                                ₹100
+                            </button>
+                            <button type="button" class="payment-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="500">
+                                ₹500
+                            </button>
+                            <button type="button" class="payment-btn bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors" data-amount="1000">
+                                ₹1000
+                            </button>
+                        </div>
+                        <p id="selectedPaymentAmount" class="mt-2 text-sm text-gray-600">Selected: ₹0</p>
                     </div>
                     <div>
                         <label for="paymentDescription" class="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
