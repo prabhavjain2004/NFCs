@@ -16,8 +16,8 @@ urlpatterns = [
     path('transactions/', views.transactions, name='transactions'),
     path('outlet/transactions/', views.outlet_transactions, name='outlet-transactions'),
     path('outlet/dashboard/', views.outlet_dashboard, name='outlet-dashboard'),
-    path('admin/dashboard/', views.admin_dashboard, name='admin-dashboard'),
-    path('admin/cards/', views.card_management, name='card-management'),
+    path('dashboard/admin/', views.admin_dashboard, name='admin-dashboard'),
+    path('dashboard/cards/', views.card_management, name='card-management'),
     
     # API endpoints
     path('api/', include(router.urls)),
