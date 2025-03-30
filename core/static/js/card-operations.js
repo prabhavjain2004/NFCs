@@ -55,11 +55,12 @@ class CardOperationsHandler {
             });
         }
 
-        // Initialize balance buttons
+        // Initialize balance buttons with touchstart and click events
         const balanceButtons = document.querySelectorAll('.balance-btn');
         if (balanceButtons.length > 0) {
             balanceButtons.forEach(button => {
-                button.addEventListener('click', () => {
+                const handleBalanceButtonAction = () => {
+                    console.log('Balance button clicked');
                     const clickedAmount = parseInt(button.getAttribute('data-amount'));
                     const initialBalanceInput = document.getElementById('initialBalance');
                     const selectedBalanceText = document.getElementById('selectedBalance');
@@ -69,6 +70,7 @@ class CardOperationsHandler {
                     
                     // Add the clicked amount to the current amount
                     const newAmount = currentAmount + clickedAmount;
+                    console.log(`Adding ${clickedAmount} to balance. New total: ${newAmount}`);
                     
                     // Update the hidden input value
                     if (initialBalanceInput) {
@@ -89,15 +91,23 @@ class CardOperationsHandler {
                         button.classList.remove('bg-blue-200', 'text-blue-800');
                         button.classList.add('bg-gray-200', 'text-gray-800');
                     }, 300);
+                };
+                
+                // Add both click and touchstart events for better mobile support
+                button.addEventListener('click', handleBalanceButtonAction);
+                button.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // Prevent default touch behavior
+                    handleBalanceButtonAction();
                 });
             });
         }
 
-        // Initialize topup buttons
+        // Initialize topup buttons with touchstart and click events
         const topupButtons = document.querySelectorAll('.topup-btn');
         if (topupButtons.length > 0) {
             topupButtons.forEach(button => {
-                button.addEventListener('click', () => {
+                const handleTopupButtonAction = () => {
+                    console.log('Topup button clicked');
                     const clickedAmount = parseInt(button.getAttribute('data-amount'));
                     const topupAmountInput = document.getElementById('topupAmount');
                     const selectedTopupAmountText = document.getElementById('selectedTopupAmount');
@@ -107,6 +117,7 @@ class CardOperationsHandler {
                     
                     // Add the clicked amount to the current amount
                     const newAmount = currentAmount + clickedAmount;
+                    console.log(`Adding ${clickedAmount} to topup. New total: ${newAmount}`);
                     
                     // Update the hidden input value
                     if (topupAmountInput) {
@@ -127,6 +138,13 @@ class CardOperationsHandler {
                         button.classList.remove('bg-blue-200', 'text-blue-800');
                         button.classList.add('bg-gray-200', 'text-gray-800');
                     }, 300);
+                };
+                
+                // Add both click and touchstart events for better mobile support
+                button.addEventListener('click', handleTopupButtonAction);
+                button.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // Prevent default touch behavior
+                    handleTopupButtonAction();
                 });
             });
         }
@@ -248,6 +266,7 @@ class CardOperationsHandler {
         try {
             // Check if Web NFC API is available
             if (!('NDEFReader' in window)) {
+                console.log('Web NFC API not available');
                 this.handleNfcScanFallback();
                 return;
             }
@@ -256,9 +275,12 @@ class CardOperationsHandler {
             
             try {
                 const reader = new NDEFReader();
+                console.log('Requesting NFC permission...');
                 await reader.scan();
+                console.log('NFC permission granted, scanning...');
 
                 reader.onreading = ({ message, serialNumber }) => {
+                    console.log('NFC card detected:', serialNumber);
                     this.nfcCardId = serialNumber;
                     this.showStatus(`NFC card scanned successfully! Card ID: ${serialNumber}`, 'success');
                     
@@ -292,6 +314,7 @@ class CardOperationsHandler {
         } catch (error) {
             console.error('General error:', error);
             this.showStatus(`Error: ${error.message}`, 'error');
+            this.handleNfcScanFallback();
         }
     }
     
@@ -317,6 +340,7 @@ class CardOperationsHandler {
         try {
             // Check if Web NFC API is available
             if (!('NDEFReader' in window)) {
+                console.log('Web NFC API not available for topup scan');
                 this.handleTopupScanFallback();
                 return;
             }
@@ -325,14 +349,18 @@ class CardOperationsHandler {
             
             try {
                 const reader = new NDEFReader();
+                console.log('Requesting NFC permission for topup...');
                 await reader.scan();
+                console.log('NFC permission granted for topup, scanning...');
 
                 reader.onreading = async ({ message, serialNumber }) => {
+                    console.log('NFC card detected for topup:', serialNumber);
                     this.showStatus(`NFC card scanned successfully! Looking up card...`, 'info');
                     
                     try {
                         await this.findAndSelectCard(serialNumber);
                     } catch (error) {
+                        console.error('Error finding card:', error);
                         this.showStatus(`Error finding card: ${error.message}`, 'error');
                     }
                     
@@ -344,7 +372,7 @@ class CardOperationsHandler {
                     this.showStatus('Error reading NFC card. Please try again.', 'error');
                 };
             } catch (nfcError) {
-                console.error('NFC error:', nfcError);
+                console.error('NFC error during topup scan:', nfcError);
                 
                 // Check if the error is due to user permissions
                 if (nfcError.name === 'NotAllowedError') {
@@ -358,8 +386,9 @@ class CardOperationsHandler {
                 }
             }
         } catch (error) {
-            console.error('General error:', error);
+            console.error('General error during topup scan:', error);
             this.showStatus(`Error: ${error.message}`, 'error');
+            this.handleTopupScanFallback();
         }
     }
     
